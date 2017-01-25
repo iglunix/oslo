@@ -10,11 +10,11 @@
 
 // Native width integer
 #if __SIZEOF_POINTER__ == 4
-#define uintn_t uint32_t
-#define intn_t int32_t
+typedef uint32_t uintn_t;
+typedef int32_t intn_t;
 #elif __SIZEOF_POINTER__ == 8
-#define uintn_t uint64_t
-#define intn_t int64_t
+typedef uint64_t uintn_t;
+typedef int64_t intn_t;
 #else
 #error Unsupported word width.
 #endif
@@ -28,8 +28,8 @@
 #endif
 
 // EFI handles
-#define efi_handle_t void*
-#define efi_event_t void*
+typedef void* efi_handle_t;
+typedef void* efi_event_t;
 
 // EFI guid
 typedef struct {
@@ -40,7 +40,7 @@ typedef struct {
 } efi_guid_t;
 
 // EFI status
-#define efi_status_t uintn_t
+typedef uintn_t efi_status_t;
 #define EFIERR(x) (x | 0x8000000000000000)
 #define EFI_ERROR(x) (((intn_t) x) < 0)
 
@@ -83,16 +83,16 @@ typedef struct {
 #define EFI_WARN_BUFFER_TOO_SMALL 4
 
 // EFI chars
-#define efi_char16_t uint16_t
-#define efi_char8_t uint8_t
+typedef uint16_t efi_char16_t;
+typedef uint8_t efi_char8_t;
 
 // EFI bool
-#define efi_bool_t uint8_t
-#define true 1
-#define false 0
+typedef uint8_t efi_bool_t;
+#define true ((efi_bool_t) 1)
+#define false ((efi_bool_t) 0)
 
-// address
-#define efi_physical_address_t uint64_t
+// EFI address
+typedef uint64_t efi_physical_address_t;
 
 // allocate type
 typedef enum {
