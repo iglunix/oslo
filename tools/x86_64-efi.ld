@@ -15,6 +15,8 @@ SECTIONS
 	{
 		*(.rdata)
 		*(.rdata$*)
+		/* linuxgcc calls it rodata for some reason */
+		*(.rodata)
 	}
 	.bss BLOCK(__section_alignment__) :
 	{
