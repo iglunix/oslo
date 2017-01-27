@@ -21,6 +21,20 @@ void init_util(efi_handle_t image_handle, efi_system_table_t *system_table)
 	}
 }
 
+efi_char16_t digits[] = L"0123456789ABCDEFGHIJKLMNOPQRSTOVWXYZ";
+efi_char16_t putc_buffer[] = { 0, 0 };
+#define puts(x) st->con_out->output_string(st->con_out, x);
+void puthex(uintn_t number)
+{
+	puts(L"0x");
+	for (size_t shift = sizeof(uintn_t) * 8 - 4;; shift -= 4) {
+		putc_buffer[0] = digits[(number >> shift) & 0xf];
+		puts(putc_buffer);
+		if (shift == 0)
+			return;
+	}
+}
+
 void abort(efi_char16_t *error_msg)
 {
 	st->con_out->output_string(st->con_out, error_msg);

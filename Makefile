@@ -10,6 +10,8 @@ EFICFLAGS   = -Iapi -Iinclude -ffreestanding -mno-red-zone -fno-stack-protector 
 EFILDFLAGS  = -shared -e efi_main -T tools/x86_64-efi.ld -m i386pep -subsystem 10
 endif
 
+all: ldr.efi
+
 ldr.efi: ldr.o util.o menu.o
 
 %.o: %.c

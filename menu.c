@@ -2,7 +2,7 @@
 #include <util.h>
 #include <menu.h>
 
-// Wait for a keypress
+// Wait for a key press
 static inline void wait_for_key()
 {
 	uintn_t index;
@@ -10,8 +10,8 @@ static inline void wait_for_key()
 }
 
 // Menu colors
-#define DEFAULT_COLOR efi_lightgray | efi_background_black
-#define SELECTED_COLOR efi_black | efi_background_lightgray
+#define DEFAULT_COLOR  EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK
+#define SELECTED_COLOR EFI_BLACK     | EFI_BACKGROUND_LIGHTGRAY
 
 // Banner height
 #define BANNER_HEIGHT 3

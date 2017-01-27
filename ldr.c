@@ -2,9 +2,9 @@
 #include <util.h>
 #include <menu.h>
 
-// About submenu
+// About sub-menu
 menu_entry_t *about_entries[] = {
-	&(menu_entry_t) { menu_entry_info, L"Welcome to YAUB (Yet Another Uefi Bootloader)!" },
+	&(menu_entry_t) { menu_entry_info, L"Welcome to YAUB (Yet Another UEFI Bootloader)!" },
 	&(menu_entry_t) { menu_entry_info, L"This program is licensed under the MIT license" },
 	&(menu_entry_t) { menu_entry_info, L"and the full source code is available at:" },
 	&(menu_entry_t) { menu_entry_info, L"https://github.com/kukrimate/yaub.git" },
@@ -35,7 +35,7 @@ menu_entry_t *main_menu_entries[] = {
 };
 
 menu_screen_t main_menu = {
-	L"Select a boot device",
+	L"Select a boodevice",
 	2,
 	main_menu_entries
 };
