@@ -1,2 +1,8 @@
+# Object code
 *.o
 *.efi
+# Eclipse
+.cproject
+.project
+.pydevproject
+.settings/
