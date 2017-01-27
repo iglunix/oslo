@@ -67,6 +67,13 @@ typedef enum {
 	efi_max_memory_type
 } efi_memory_type_t;
 
+// locate search type
+typedef enum {
+	all_handles,
+	by_register_notify,
+	by_protocol
+} efi_locate_search_type_t;
+
 // Forward declarations
 typedef struct _efi_system_table efi_system_table_t;
 
@@ -114,7 +121,19 @@ typedef struct {
 	efi_status_t (efi_func *handle_protocol) (efi_handle_t handle, efi_guid_t *protocol, void **interface);
 	void *reserved;
 	void *register_protocol_notify;
-	//efi_status_t (efi_func *locate_handle) ();
+	efi_status_t (efi_func *locate_handle)   (efi_locate_search_type_t search_type, efi_guid_t *protocol,
+			void *search_key, uintn_t *buffer_size, efi_handle_t *buffer);
+	void *locate_device_path;
+	void *install_configuration_table;
+
+	// Image services
+	efi_status_t (efi_func *load_image)         (efi_bool_t boot_policy, efi_handle_t parent_image_handle,
+			efi_device_path_protocol_t *device_path, void *source_buffer, uintn_t source_size, efi_handle_t *image_handle);
+	efi_status_t (efi_func *start_image)        (efi_handle_t image_handle, uintn_t *exit_data_size, efi_char16_t **exit_data);
+	efi_status_t (efi_func *exit)               (efi_handle_t image_handle, efi_status_t exit_status, uintn_t exit_data_size,
+			efi_char16_t *exit_data);
+	efi_status_t (efi_func *unload_image)       (efi_handle_t image_handle);
+	efi_status_t (efi_func *exit_boot_services) (efi_handle_t image_handle, uintn_t map_key);
 } efi_boot_services_t;
 
 // EFI system table
