@@ -31,6 +31,37 @@ void menu_clearscreen()
 	st->con_out->clear_screen(st->con_out);
 }
 
+static void menu_banner(menu_screen_t *screen)
+{
+	// Clear the screen
+	menu_clearscreen();
+	// Draw banner
+	st->con_out->set_attr(st->con_out, SELECTED_COLOR);
+	for (size_t i = 0; i < BANNER_HEIGHT; ++i) {
+		st->con_out->set_cursor_pos(st->con_out, 0, i);
+		for (size_t j = 0; j < cols; ++j) {
+			st->con_out->output_string(st->con_out, L" ");
+		}
+	}
+	st->con_out->set_cursor_pos(st->con_out, 0, BANNER_HEIGHT / 2);
+	st->con_out->output_string(st->con_out, screen->title);
+}
+
+static void menu_entries(menu_screen_t *screen, size_t selected_entry)
+{
+	// Draw the entries
+	for (size_t i = 0; i < screen->entry_count; ++i) {
+		if (i == selected_entry) {
+			st->con_out->set_attr(st->con_out, SELECTED_COLOR);
+		} else {
+			st->con_out->set_attr(st->con_out, DEFAULT_COLOR);
+		}
+
+		st->con_out->set_cursor_pos(st->con_out, 0, i + 3);
+		st->con_out->output_string(st->con_out, screen->entries[i]->text);
+	}
+}
+
 menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
 {
 	size_t menu_index;
@@ -44,76 +75,66 @@ menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
 		return NULL;
 	}
 
-menu_redraw:
-	// Clear the screen
-	menu_clearscreen();
-	// Draw banner
-	st->con_out->set_attr(st->con_out, SELECTED_COLOR);
-	for (size_t i = 0; i < BANNER_HEIGHT; ++i) {
-		st->con_out->set_cursor_pos(st->con_out, 0, i);
-		for (size_t j = 0; j < cols; ++j) {
-			st->con_out->output_string(st->con_out, L" ");
-		}
-	}
-	st->con_out->set_cursor_pos(st->con_out, 0, BANNER_HEIGHT / 2);
-	st->con_out->output_string(st->con_out, screen->title);
+	menu_banner(screen);
+	menu_entries(screen, menu_index);
 
-menu_redraw_entries:
-	// Draw the entries
-	for (size_t i = 0; i < screen->entry_count; ++i) {
-		if (i == menu_index) {
-			st->con_out->set_attr(st->con_out, SELECTED_COLOR);
-		} else {
-			st->con_out->set_attr(st->con_out, DEFAULT_COLOR);
-		}
+	for (;;) {
+		// Read user input
+		wait_for_key();
+		st->con_in->read_key(st->con_in, &key);
 
-		st->con_out->set_cursor_pos(st->con_out, 0, i + 3);
-		st->con_out->output_string(st->con_out, screen->entries[i]->text);
-	}
+		// First try to take action based on the scancode
+		switch (key.scan) {
 
-menu_rescan:
-	// Read user input
-	wait_for_key();
-	st->con_in->read_key(st->con_in, &key);
-
-	// First try to take action based on the scancode
-	switch (key.scan) {
-	case 0x01: // Arrow up
-		// convert the index to a signed and check out of bounds
-		if (((intn_t) menu_index) - 1 < 0) {
-			goto menu_rescan;
-		}
-		--menu_index;
-		goto menu_redraw_entries;
-	case 0x02:
-		if (menu_index + 1 > screen->entry_count - 1) {
-			goto menu_rescan;
-		}
-		++menu_index;
-		goto menu_redraw_entries;
-	}
-
-	// Than try the character code
-	switch (key.c) {
-	case L'\n':
-	case L'\r':
-	case ' ':
-		switch (screen->entries[menu_index]->type) {
-		case menu_entry_subscreen: // Display submenu on submenu entries
-			submenu_entry = menu_run(((menu_entry_subscreen_t *) screen->entries[menu_index])->subscreen, 0);
-			switch (submenu_entry->type) {
-			case menu_entry_exit: // Continue on if the submenu was exited
-				break;
-			default: // Return the entry if something was choosen from the submenu (except exit and info entries)
-				return submenu_entry;
+		case 0x01: // Arrow up
+			// convert the index to a signed and check out of bounds
+			if (((intn_t) menu_index) - 1 < 0) {
+				continue;
 			}
-			goto menu_redraw;
-		case menu_entry_info: // Don't do anything on info entries
-			goto menu_rescan;
-		default:
-			return screen->entries[menu_index];
-		}
-	}
+			--menu_index;
+			menu_entries(screen, menu_index);
+			break;
 
-	goto menu_rescan;
+		case 0x02: // Arrow down
+			if (menu_index + 1 > screen->entry_count - 1) {
+				continue;
+			}
+			++menu_index;
+			menu_entries(screen, menu_index);
+			break;
+
+		}
+
+		// Than try the character code
+		if (key.c == L'\n' || key.c == L'\r' || key.c == L' ') {
+			switch (screen->entries[menu_index]->type) {
+
+			case menu_entry_subscreen: // Display submenu on submenu entries
+				submenu_entry = menu_run(((menu_entry_subscreen_t *) screen->entries[menu_index])->subscreen, 0);
+
+				switch (submenu_entry->type) {
+
+				case menu_entry_exit: // Continue on if the submenu was exited
+					break;
+
+				default: // Return the entry if something was choosen from the submenu (except exit and info entries)
+					return submenu_entry;
+
+				}
+
+				menu_banner(screen);
+				menu_entries(screen, menu_index);
+				break;
+
+			case menu_entry_info: // Don't do anything on info entries
+				break;
+
+			default: // Return the choosen entry
+				return screen->entries[menu_index];
+
+			} // entry type switch END
+
+		} // character code if END
+
+	} // for loop END
 }

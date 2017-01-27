@@ -35,7 +35,7 @@ menu_entry_t *main_menu_entries[] = {
 };
 
 menu_screen_t main_menu = {
-	L"Select a boodevice",
+	L"Select a boot device",
 	2,
 	main_menu_entries
 };
