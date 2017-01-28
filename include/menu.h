@@ -5,7 +5,7 @@
 typedef enum {
 	menu_entry_info,
 	menu_entry_subscreen,
-	mneu_entry_exec,
+	menu_entry_exec,
 	menu_entry_exit
 } menu_entry_type_t;
 

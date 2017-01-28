@@ -4,6 +4,8 @@
 // globals
 efi_handle_t self_image_handle;
 efi_loaded_image_protocol_t *self_loaded_image;
+efi_simple_file_system_protocol_t *self_volume;
+efi_file_protocol_t *self_root_dir;
 efi_system_table_t *st;
 efi_boot_services_t *bs;
 
@@ -18,6 +20,27 @@ void init_util(efi_handle_t image_handle, efi_system_table_t *system_table)
 	status = bs->handle_protocol(self_image_handle, &(efi_guid_t) EFI_LOADED_IMAGE_PROTOCOL_GUID, (void **) &self_loaded_image);
 	if (EFI_ERROR(status)) {
 		abort(L"Error handling efi_loaded_image_protocol_t for the image handle!\r\n", status);
+	}
+	// Locate the volume we booted from
+	status = bs->handle_protocol(self_loaded_image->device_handle, &(efi_guid_t) EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID,
+			(void **) &self_volume);
+	if (EFI_ERROR(status)) {
+		abort(L"Error locating self volume!\r\n", status);
+	}
+	// Open the self volume
+	status = self_volume->open_volume(self_volume, &self_root_dir);
+	if (EFI_ERROR(status)) {
+		abort(L"Error opening self volume!\r\n", status);
+	}
+}
+
+void fini_util()
+{
+	efi_status_t status;
+
+	status = self_root_dir->close(self_root_dir);
+	if (EFI_ERROR(status)) {
+		abort(L"Error closing self volume!\r\n", status);
 	}
 }
 
@@ -85,6 +108,13 @@ void free(void *buffer)
 size_t strlen(efi_char16_t *str)
 {
 	efi_char16_t *p = str;
+	for (; *p; ++p);
+	return p - str;
+}
+
+size_t ascii_strlen(char *str)
+{
+	char *p = str;
 	for (; *p; ++p);
 	return p - str;
 }

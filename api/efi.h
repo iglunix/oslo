@@ -1,6 +1,11 @@
 #ifndef __EFI_H
 #define __EFI_H
 
+/* Structure alingment */
+#if !defined(__GNUC__)
+#pragma pack()
+#endif
+
 /* Include CPU specific header */
 #if defined __amd64__ || defined _M_AMD64
 	#include <amd64/cpu.h>
@@ -33,6 +38,21 @@ typedef struct {
 	uint16_t data3;
 	uint8_t  data4[8];
 } efi_guid_t;
+
+// EFI time
+typedef struct {
+	uint16_t year;
+	uint8_t  month;
+	uint8_t  day;
+	uint8_t  hour;
+	uint8_t  minute;
+	uint8_t  second;
+	uint8_t  pad1;
+	uint32_t nanosecond;
+	int16_t  time_zone;
+	uint8_t  daylight;
+	uint8_t  pad2;
+} efi_time_t;
 
 // EFI status
 #include <efi_status.h>
@@ -82,6 +102,8 @@ typedef struct _efi_system_table efi_system_table_t;
 #include <protocol/efi_simple_text_in.h>
 #include <protocol/efi_device_path.h>
 #include <protocol/efi_loaded_image.h>
+#include <protocol/efi_file_protocol.h>
+#include <protocol/efi_simple_file_system.h>
 
 // EFI tables
 typedef struct {

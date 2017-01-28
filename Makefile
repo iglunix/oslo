@@ -12,7 +12,7 @@ endif
 
 all: ldr.efi
 
-ldr.efi: ldr.o util.o menu.o
+ldr.efi: ldr.o util.o menu.o config.o
 
 %.o: %.c
 	$(CC) $(EFICFLAGS) -c $^ -o $@
