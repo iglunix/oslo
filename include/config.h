@@ -14,11 +14,7 @@
 /* On-disk location of the boot entry definition file */
 #define ENTRIES_FILE_NAME L"\\efi\\yaub\\entries.ini"
 
-/* Read all boot entries and store them in buffer
- * if the buffer is too small EFI_BUFFER_TOO_SMALL
- * is returned and the required buffer size is stored
- * in buffer_size
- * */
+/* Read all boot entries */
 void get_entries(uintn_t *buffer_size, menu_entry_exec_t ***buffer);
 
 #endif /* INCLUDE_CONFIG_H_ */
