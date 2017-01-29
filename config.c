@@ -135,11 +135,15 @@ void get_entries(uintn_t *returned_entries, menu_entry_exec_t ***entries)
 			goto next;
 		}
 
-		if (starts_with(current_line, "name"))
+		if (*returned_entries < 1) { /* If we reach here without good entries something is bad */
+			abort(L"Entries file is invalid! Please check!\r\n", EFI_INVALID_PARAMETER);
+		}
+
+		if (starts_with(current_line, "name="))
 			(*entries)[(*returned_entries) - 1]->base.text = ascii_str_to_efi(current_line + 5, current_line_length - 6);
-		if (starts_with(current_line, "path"))
+		if (starts_with(current_line, "path="))
 			(*entries)[(*returned_entries) - 1]->path = ascii_str_to_efi(current_line + 5, current_line_length - 6);
-		if (starts_with(current_line, "flags"))
+		if (starts_with(current_line, "flags="))
 			(*entries)[(*returned_entries) - 1]->flags = ascii_str_to_efi(current_line + 6, current_line_length - 7);
 next:
 		/* Go to the next line */
@@ -147,4 +151,12 @@ next:
 	}
 
 	free(entries_contents);
+
+	/* Check if all entries have the required fields */
+	for (size_t index = 0; index < *returned_entries; ++index) {
+		if ((*entries)[index]->base.text == NULL ||
+				(*entries)[index]->path == NULL) {
+			abort(L"Entries file is invalid! Please check!\r\n", EFI_INVALID_PARAMETER);
+		}
+	}
 }
