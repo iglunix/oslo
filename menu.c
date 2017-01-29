@@ -60,6 +60,7 @@ void menu_banner(efi_char16_t *banner_text)
 	}
 	st->con_out->set_cursor_pos(st->con_out, 0, BANNER_HEIGHT / 2);
 	st->con_out->output_string(st->con_out, banner_text);
+	st->con_out->set_attr(st->con_out, DEFAULT_COLOR);
 }
 
 menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
