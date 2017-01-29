@@ -5,7 +5,7 @@
  *      Author: kmate
  */
 #include <efi.h>
-#include <util.h>
+#include <efiutil.h>
 #include <menu.h>
 #include <config.h>
 
