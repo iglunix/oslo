@@ -2,13 +2,6 @@
 #include <util.h>
 #include <menu.h>
 
-// Wait for a key press
-static inline void wait_for_key()
-{
-	uintn_t index;
-	bs->wait_for_event(1, &st->con_in->wait_for_key, &index);
-}
-
 // Menu colors
 #define DEFAULT_COLOR  EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK
 #define SELECTED_COLOR EFI_BLACK     | EFI_BACKGROUND_LIGHTGRAY
@@ -18,34 +11,6 @@ static inline void wait_for_key()
 
 // Menu variables
 size_t cols, rows;
-
-void menu_init()
-{
-	st->con_out->query_mode(st->con_out, st->con_out->mode->mode, &cols, &rows);
-	st->con_out->enable_cursor(st->con_out, false);
-}
-
-void menu_clearscreen()
-{
-	st->con_out->set_attr(st->con_out, DEFAULT_COLOR);
-	st->con_out->clear_screen(st->con_out);
-}
-
-static void menu_banner(menu_screen_t *screen)
-{
-	// Clear the screen
-	menu_clearscreen();
-	// Draw banner
-	st->con_out->set_attr(st->con_out, SELECTED_COLOR);
-	for (size_t i = 0; i < BANNER_HEIGHT; ++i) {
-		st->con_out->set_cursor_pos(st->con_out, 0, i);
-		for (size_t j = 0; j < cols; ++j) {
-			st->con_out->output_string(st->con_out, L" ");
-		}
-	}
-	st->con_out->set_cursor_pos(st->con_out, 0, BANNER_HEIGHT / 2);
-	st->con_out->output_string(st->con_out, screen->title);
-}
 
 static void menu_entries(menu_screen_t *screen, size_t selected_entry)
 {
@@ -62,6 +27,41 @@ static void menu_entries(menu_screen_t *screen, size_t selected_entry)
 	}
 }
 
+// Wait for a key press
+void menu_wait_for_key()
+{
+	uintn_t index;
+	bs->wait_for_event(1, &st->con_in->wait_for_key, &index);
+}
+
+
+void menu_init()
+{
+	st->con_out->query_mode(st->con_out, st->con_out->mode->mode, &cols, &rows);
+	st->con_out->enable_cursor(st->con_out, false);
+}
+
+void menu_clearscreen()
+{
+	st->con_out->set_attr(st->con_out, DEFAULT_COLOR);
+	st->con_out->clear_screen(st->con_out);
+}
+void menu_banner(efi_char16_t *banner_text)
+{
+	// Clear the screen
+	menu_clearscreen();
+	// Draw banner
+	st->con_out->set_attr(st->con_out, SELECTED_COLOR);
+	for (size_t i = 0; i < BANNER_HEIGHT; ++i) {
+		st->con_out->set_cursor_pos(st->con_out, 0, i);
+		for (size_t j = 0; j < cols; ++j) {
+			st->con_out->output_string(st->con_out, L" ");
+		}
+	}
+	st->con_out->set_cursor_pos(st->con_out, 0, BANNER_HEIGHT / 2);
+	st->con_out->output_string(st->con_out, banner_text);
+}
+
 menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
 {
 	size_t menu_index;
@@ -75,12 +75,12 @@ menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
 		return NULL;
 	}
 
-	menu_banner(screen);
+	menu_banner(screen->title);
 	menu_entries(screen, menu_index);
 
 	for (;;) {
 		// Read user input
-		wait_for_key();
+		menu_wait_for_key();
 		st->con_in->read_key(st->con_in, &key);
 
 		// First try to take action based on the scancode
@@ -122,7 +122,7 @@ menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
 
 				}
 
-				menu_banner(screen);
+				menu_banner(screen->title);
 				menu_entries(screen, menu_index);
 				break;
 

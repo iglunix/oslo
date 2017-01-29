@@ -213,6 +213,7 @@ efi_device_path_protocol_t *append_filepath_device_path(efi_device_path_protocol
 
 	base_len = get_dp_len(base);
 	file_path_len = strsize(file_path);
+
 	result = malloc(base_len + 2 * sizeof(efi_device_path_protocol_t) + file_path_len);
 
 	memcpy(result, base, base_len);
