@@ -17,9 +17,9 @@ typedef struct {
 
 // A menu entry that executes an EFI application
 typedef struct {
-	menu_entry_t                base;
-	efi_device_path_protocol_t *path;
-	efi_char16_t               *flags;
+	menu_entry_t  base;
+	efi_char16_t *path;
+	efi_char16_t *flags;
 } menu_entry_exec_t;
 
 // Forward declaration for a menu screen

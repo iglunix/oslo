@@ -84,6 +84,28 @@ void memcpy(void *dest, void *src, size_t n)
 	}
 }
 
+void *realloc(void *oldptr, size_t oldsize, size_t newsize)
+{
+	void *newptr;
+
+	/* Allocate the new region */
+	newptr = malloc(newsize);
+
+	/* Check if is oldptr NULL */
+	if (oldptr == NULL) {
+		return newptr;
+	}
+
+	/* Copy over the contents from the old to the new region */
+	memcpy(newptr, oldptr, oldsize);
+
+	/* Free the old memory region */
+	free(oldptr);
+
+	/* Return the pointer to the new memory region */
+	return newptr;
+}
+
 void *malloc(size_t size)
 {
 	void *buffer;

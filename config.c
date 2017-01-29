@@ -10,13 +10,13 @@
 #include <config.h>
 
 /* Convert an ascii string to an EFI string */
-static efi_char16_t *ascii_str_to_efi(char *ascii_str)
+static efi_char16_t *ascii_str_to_efi(char *ascii_str, size_t len)
 {
 	efi_char16_t *str;
 	size_t index;
 
-	str = malloc((ascii_strlen(ascii_str) + 1) * sizeof(efi_char16_t));
-	for (index = 0; ascii_str[index] != '\0'; ++index) {
+	str = malloc((len + 1) * sizeof(efi_char16_t));
+	for (index = 0; index < len; ++index) {
 		str[index] = (efi_char16_t) ascii_str[index];
 	}
 	str[++index] = L'\0';
@@ -24,41 +24,37 @@ static efi_char16_t *ascii_str_to_efi(char *ascii_str)
 	return str;
 }
 
-static size_t read_line(efi_file_protocol_t *file, char *buffer)
+static size_t get_file_size(efi_file_protocol_t *file)
 {
 	efi_status_t status;
-	size_t i;
-	uintn_t read_len;
+	efi_file_info_t *file_info;
+	uintn_t file_info_size;
+	uintn_t file_size;
 
-	// FIXME: this code is vulnerable to a buffer overflow attack
-	for (i = 0;; ++i) {
-		read_len = 1;
-		status = file->read(file, &read_len, (char *)(((uintn_t) buffer) + i));
-		if (buffer[i] == '\n') {
-			if (i == 0) { // Ignore empty lines
-				--i;
-				continue;
-			}
-			buffer[i] = '\0';
-			goto done;
-		}
-
-		if (read_len == 0) {
-			buffer[i + 1] = '\0';
-			goto done;
-		}
+	/* Don't play the buffer growing dance just say the buffer is 0 bytes and allocate it afterwards then re-call */
+	file_info = NULL;
+	file_info_size = 0;
+retry:
+	status = file->get_info(file, &(efi_guid_t) EFI_FILE_INFO_ID, &file_info_size, file_info);
+	if (status == EFI_BUFFER_TOO_SMALL) {
+		file_info = malloc(file_info_size);
+		goto retry;
 	}
-done:
-	return i;
+	if (EFI_ERROR(status)) {
+		abort(L"Error getting file info!\r\n", status);
+	}
+	file_size = file_info->file_size;
+	free(file_info);
+	return file_size;
 }
 
-efi_bool_t ascii_str_starts_with(char *haystack, char *needle)
+static efi_bool_t starts_with(char *haystack, char *needle)
 {
-	size_t needle_len;
+	size_t needle_len, index;
 
 	needle_len = ascii_strlen(needle);
-	for (size_t i = 0; i < needle_len; ++i) {
-		if (haystack[i] != needle[i]) {
+	for (index = 0; index < needle_len; ++index) {
+		if (haystack[index] != needle[index]) {
 			return false;
 		}
 	}
@@ -66,96 +62,89 @@ efi_bool_t ascii_str_starts_with(char *haystack, char *needle)
 	return true;
 }
 
-char *ascii_str_split_at(char *str, char delim)
+static char *get_next_line(char *start)
 {
-	size_t str_len;
-
-	str_len = ascii_strlen(str);
-	for (size_t i = 0; i < str_len; ++i) {
-		if (str[i] == delim) {
-			return (char *) (((uintn_t) str) + i + 1);
+	for (;*start != '\n'; ++start) {
+		if (*start == 0) {
+			return NULL;
 		}
 	}
-
-	return NULL;
+	return ++start;
 }
 
-efi_device_path_protocol_t *find_self_volume_dp()
+void get_entries(uintn_t *returned_entries, menu_entry_exec_t ***entries)
 {
 	efi_status_t status;
-	efi_device_path_protocol_t *self_volume_dp;
 
-	status = bs->handle_protocol(self_loaded_image->device_handle, &(efi_guid_t) EFI_DEVICE_PATH_PROTOCOL_GUID, (void **) &self_volume_dp);
-	if (EFI_ERROR(status)) {
-		abort(L"Error locating self volume device path!\r\n", status);
-	}
-
-	return self_volume_dp;
-}
-
-void get_entries(uintn_t *buffer_size, menu_entry_exec_t ***buffer)
-{
-	efi_status_t status;
 	efi_file_protocol_t *entries_file;
-	size_t count;
-	char line[CONFIG_FILE_MAX_LINE_LEN];
-	efi_device_path_protocol_t *self_volume_dp;
+	uintn_t entries_contents_size;
+	char *entries_contents;
 
-	self_volume_dp = find_self_volume_dp();
+	char *next_line, *current_line;
+	size_t current_line_length;
 
+	/* Open the configuration file */
 	status = self_root_dir->open(self_root_dir, &entries_file, ENTRIES_FILE_NAME, EFI_FILE_MODE_READ, 0);
 	if (EFI_ERROR(status)) {
 		abort(L"Error opening entries file!\r\n", status);
 	}
 
-	/* Count the entries */
-	count = 0;
-	while (read_line(entries_file, line)) {
-		if (line[0] == ';') { // Ignore comments
-			continue;
-		}
+	/* Read the whole file */
+	entries_contents_size = get_file_size(entries_file);
 
-		if (line[0] == '[') { // New entry
-			++count;
-			continue;
-		}
+	/* +1 to leave space for the null-terminator */
+	entries_contents = malloc(entries_contents_size + 1);
+
+	status = entries_file->read(entries_file, &entries_contents_size, entries_contents);
+	if (EFI_ERROR(status)) {
+		abort(L"Error reading boot entry description file!\r\n", status);
 	}
 
-	/* Allocate memory for the entries */
-	*buffer = malloc(count * sizeof(menu_entry_t *));
+	/* Null-terminate the string */
+	entries_contents[entries_contents_size] = 0;
 
-	/* Read again */
-	entries_file->set_position(entries_file, 0);
-	count = 0;
-	while (read_line(entries_file, line)) {
-		if (line[0] == ';') { // Ignore comments
-			continue;
-		}
-
-		if (line[0] == '[') { // New entry
-			++count;
-			(*buffer)[count - 1] = malloc(sizeof(menu_entry_exec_t));
-			(*buffer)[count - 1]->base.type = menu_entry_exec;
-			continue;
-		}
-
-		if (ascii_str_starts_with(line, "name")) {
-			(*buffer)[count - 1]->base.text = ascii_str_to_efi(ascii_str_split_at(line, '='));
-		}
-
-		if (ascii_str_starts_with(line, "path")) {
-			(*buffer)[count - 1]->path = append_filepath_device_path(self_volume_dp, ascii_str_to_efi(ascii_str_split_at(line, '=')));
-		}
-
-		if (ascii_str_starts_with(line, "flags")) {
-			(*buffer)[count - 1]->flags = ascii_str_to_efi(ascii_str_split_at(line, '='));
-		}
-	}
-
-	*buffer_size = count;
-
+	/* Close the configuration file */
 	status = entries_file->close(entries_file);
 	if (EFI_ERROR(status)) {
 		abort(L"Error closing entries file!\r\n", status);
 	}
+
+	/* Prepare */
+	*entries = NULL;
+	*returned_entries = 0;
+
+	/* Iterate through the contents */
+	current_line = entries_contents;
+	while (next_line = get_next_line(current_line)) {
+		current_line_length = next_line - current_line;
+
+		/* Parse line */
+
+		if (current_line[0] == ';' || current_line[0] == '\n') { /* Ignore empty line or comment */
+			goto next;
+		}
+
+		if (current_line[0] == '[') { /* New entry starts here */
+			*entries = realloc(*entries, (*returned_entries) * sizeof(menu_entry_exec_t *),
+					(++(*returned_entries)) * sizeof(menu_entry_exec_t *));
+
+			/* Fill the type field of the current entry */
+			(*entries)[(*returned_entries) - 1] = malloc(sizeof(menu_entry_exec_t));
+			(*entries)[(*returned_entries) - 1]->base.type = menu_entry_exec;
+
+			goto next;
+		}
+
+		if (starts_with(current_line, "name"))
+			(*entries)[(*returned_entries) - 1]->base.text = ascii_str_to_efi(current_line + 5, current_line_length - 6);
+		if (starts_with(current_line, "path"))
+			(*entries)[(*returned_entries) - 1]->path = ascii_str_to_efi(current_line + 5, current_line_length - 6);
+		if (starts_with(current_line, "flags"))
+			(*entries)[(*returned_entries) - 1]->flags = ascii_str_to_efi(current_line + 6, current_line_length - 7);
+next:
+		/* Go to the next line */
+		current_line = next_line;
+	}
+
+	free(entries_contents);
 }
