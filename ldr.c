@@ -47,6 +47,7 @@ efi_device_path_protocol_t *get_self_volume_dp()
 static void start_efi_image(efi_char16_t *path, efi_char16_t *flags)
 {
 	efi_status_t status;
+	efi_in_key_t key;
 	efi_handle_t child_image_handle;
 	efi_device_path_protocol_t *image_dp;
 
@@ -72,7 +73,7 @@ done:
 	/* Wait for a keypress before re-drawing the menu */
 	menu_clearscreen();
 	st->con_out->output_string(st->con_out, L"Started image returned! Press any key to continue!\r\n");
-	menu_wait_for_key();
+	menu_wait_for_key(&key);
 }
 
 efi_status_t efi_func efi_main(efi_handle_t image_handle, efi_system_table_t *system_table)

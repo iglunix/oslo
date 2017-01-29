@@ -39,7 +39,7 @@ typedef struct menu_screen {
 } menu_screen_t;
 
 /* Wait for a keypress */
-void menu_wait_for_key();
+void menu_wait_for_key(efi_in_key_t *key);
 
 /* Display a banner */
 void menu_banner(efi_char16_t *banner_text);

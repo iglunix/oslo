@@ -156,6 +156,11 @@ typedef struct {
 			efi_char16_t *exit_data);
 	efi_status_t (efi_func *unload_image)       (efi_handle_t image_handle);
 	efi_status_t (efi_func *exit_boot_services) (efi_handle_t image_handle, uintn_t map_key);
+
+	// Misc services
+	void *get_next_monotonic_count;
+	efi_status_t (efi_func *stall)              (uintn_t microseconds);
+	efi_status_t (efi_func *set_watchdog_timer) (uintn_t timeout, uint64_t watchdog_code, uintn_t data_size, efi_char16_t *watchdog_data);
 } efi_boot_services_t;
 
 // EFI system table

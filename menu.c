@@ -28,10 +28,14 @@ static void menu_entries(menu_screen_t *screen, size_t selected_entry)
 }
 
 // Wait for a key press
-void menu_wait_for_key()
+void menu_wait_for_key(efi_in_key_t *key)
 {
 	uintn_t index;
+
+	/* Wait for a key press */
 	bs->wait_for_event(1, &st->con_in->wait_for_key, &index);
+	/* Read the key */
+	st->con_in->read_key(st->con_in, key);
 }
 
 
@@ -81,8 +85,7 @@ menu_entry_t *menu_run(menu_screen_t *screen, size_t default_selected_entry)
 
 	for (;;) {
 		// Read user input
-		menu_wait_for_key();
-		st->con_in->read_key(st->con_in, &key);
+		menu_wait_for_key(&key);
 
 		// First try to take action based on the scancode
 		switch (key.scan) {
