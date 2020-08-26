@@ -10,32 +10,32 @@
 #include <config.h>
 
 /* Convert an ascii string to an EFI string */
-static efi_char16_t *ascii_str_to_efi(char *ascii_str, size_t len)
+static efi_ch16 *ascii_str_to_efi(char *ascii_str, efi_size len)
 {
-	efi_char16_t *str;
-	size_t index;
+	efi_ch16 *str;
+	efi_size index;
 
-	str = malloc((len + 1) * sizeof(efi_char16_t));
+	str = malloc((len + 1) * sizeof(efi_ch16));
 	for (index = 0; index < len; ++index) {
-		str[index] = (efi_char16_t) ascii_str[index];
+		str[index] = (efi_ch16) ascii_str[index];
 	}
 	str[++index] = L'\0';
 
 	return str;
 }
 
-static size_t get_file_size(efi_file_protocol_t *file)
+static efi_size get_file_size(efi_file_protocol *file)
 {
-	efi_status_t status;
-	efi_file_info_t *file_info;
-	uintn_t file_info_size;
-	uintn_t file_size;
+	efi_status status;
+	efi_file_info *file_info;
+	efi_size file_info_size;
+	efi_size file_size;
 
 	/* Don't play the buffer growing dance just say the buffer is 0 bytes and allocate it afterwards then re-call */
 	file_info = NULL;
 	file_info_size = 0;
 retry:
-	status = file->get_info(file, &(efi_guid_t) EFI_FILE_INFO_ID, &file_info_size, file_info);
+	status = file->get_info(file, &(efi_guid) EFI_FILE_INFO_ID, &file_info_size, file_info);
 	if (status == EFI_BUFFER_TOO_SMALL) {
 		file_info = malloc(file_info_size);
 		goto retry;
@@ -48,9 +48,9 @@ retry:
 	return file_size;
 }
 
-static efi_bool_t starts_with(char *haystack, char *needle)
+static efi_bool starts_with(char *haystack, char *needle)
 {
-	size_t needle_len, index;
+	efi_size needle_len, index;
 
 	needle_len = ascii_strlen(needle);
 	for (index = 0; index < needle_len; ++index) {
@@ -72,16 +72,16 @@ static char *get_next_line(char *start)
 	return ++start;
 }
 
-void get_entries(uintn_t *returned_entries, menu_entry_exec_t ***entries)
+void get_entries(efi_size *returned_entries, menu_entry_exec ***entries)
 {
-	efi_status_t status;
+	efi_status status;
 
-	efi_file_protocol_t *entries_file;
-	uintn_t entries_contents_size;
+	efi_file_protocol *entries_file;
+	efi_size entries_contents_size;
 	char *entries_contents;
 
 	char *next_line, *current_line;
-	size_t current_line_length;
+	efi_size current_line_length;
 
 	/* Open the configuration file */
 	status = self_root_dir->open(self_root_dir, &entries_file, ENTRIES_FILE_NAME, EFI_FILE_MODE_READ, 0);
@@ -125,12 +125,12 @@ void get_entries(uintn_t *returned_entries, menu_entry_exec_t ***entries)
 		}
 
 		if (current_line[0] == '[') { /* New entry starts here */
-			*entries = realloc(*entries, (*returned_entries) * sizeof(menu_entry_exec_t *),
-					(++(*returned_entries)) * sizeof(menu_entry_exec_t *));
+			*entries = realloc(*entries, (*returned_entries) * sizeof(menu_entry_exec *),
+					(++(*returned_entries)) * sizeof(menu_entry_exec *));
 
 			/* Fill the type field of the current entry */
-			(*entries)[(*returned_entries) - 1] = malloc(sizeof(menu_entry_exec_t));
-			(*entries)[(*returned_entries) - 1]->base.type = menu_entry_exec;
+			(*entries)[(*returned_entries) - 1] = malloc(sizeof(menu_entry_exec));
+			(*entries)[(*returned_entries) - 1]->base.type = menu_type_exec;
 
 			goto next;
 		}
@@ -153,7 +153,7 @@ next:
 	free(entries_contents);
 
 	/* Check if all entries have the required fields */
-	for (size_t index = 0; index < *returned_entries; ++index) {
+	for (efi_size index = 0; index < *returned_entries; ++index) {
 		if ((*entries)[index]->base.text == NULL ||
 				(*entries)[index]->path == NULL) {
 			abort(L"Entries file is invalid! Please check!\r\n", EFI_INVALID_PARAMETER);
