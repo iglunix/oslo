@@ -1,5 +1,6 @@
 #include <efi.h>
 #include <efiutil.h>
+#include <khelper.h>
 #include <menu.h>
 #include <config.h>
 
@@ -35,17 +36,26 @@ efi_device_path_protocol *
 get_self_volume_dp()
 {
 	efi_status status;
+	efi_loaded_image_protocol *self_loaded_image;
 	efi_device_path_protocol *dp;
+
+	status = bs->handle_protocol(
+		self_image_handle,
+		&(efi_guid) EFI_LOADED_IMAGE_PROTOCOL_GUID,
+		(void **) &self_loaded_image);
+	if (EFI_ERROR(status))
+		goto err;
 
 	status = bs->handle_protocol(
 		self_loaded_image->device_handle,
 		&(efi_guid) EFI_DEVICE_PATH_PROTOCOL_GUID,
 		(void **) &dp);
-	if (EFI_ERROR(status)) {
-		abort(L"Error locating self volume device path!", status);
-	}
+	if (EFI_ERROR(status))
+		goto err;
 
 	return dp;
+err:
+	efi_abort(L"Error locating self volume device path!", status);
 }
 
 static
@@ -61,9 +71,6 @@ start_efi_image(efi_ch16 *path, efi_ch16 *flags)
 	menu_clearscreen();
 	menu_banner(L"Running child image");
 
-	/* Get rid of util structures before starting a child image */
-	fini_util();
-
 	/* Start the image */
 	image_dp = append_filepath_device_path(get_self_volume_dp(), path);
 	status = bs->load_image(
@@ -76,15 +83,14 @@ start_efi_image(efi_ch16 *path, efi_ch16 *flags)
 	status = bs->start_image(child_image_handle, NULL, NULL);
 
 done:
-	free(image_dp);
+	efi_free(image_dp);
 
 	/* If the image returns re-init ourselves */
-	init_util(self_image_handle, st);
 	menu_init();
 
 	/* Wait for a keypress before re-drawing the menu */
 	menu_clearscreen();
-	print(L"Started image returned! Press any key to continue!\r\n");
+	efi_print(L"Child image returned! Press any key to continue!\n");
 	menu_wait_for_key(&key);
 }
 
@@ -98,14 +104,14 @@ efi_main(efi_handle image_handle, efi_system_table *system_table)
 	menu_entry_exec **boot_entries;
 	efi_size boot_entries_size;
 
-	init_util(image_handle, system_table);
+	efi_init(image_handle, system_table);
 	menu_init();
 
 	// Read menu entries
 	get_entries(&boot_entries_size, &boot_entries);
 
 	// Merge pre-defined and dynamic entries
-	merged_entries = malloc(sizeof(menu_entry *) * (boot_entries_size + NUM_MAIN_MENU_ENTRIES));
+	merged_entries = efi_alloc(sizeof(menu_entry *) * (boot_entries_size + NUM_MAIN_MENU_ENTRIES));
 	memcpy(merged_entries, boot_entries, sizeof(menu_entry *) * boot_entries_size);
 	memcpy((void *) (((efi_size) merged_entries) + sizeof(menu_entry *) * boot_entries_size), main_menu_entries, sizeof(menu_entry *) * NUM_MAIN_MENU_ENTRIES);
 
@@ -118,7 +124,8 @@ efi_main(efi_handle image_handle, efi_system_table *system_table)
 		case menu_type_exit:
 			goto done;
 		case menu_type_exec:
-			start_efi_image(((menu_entry_exec *) selected)->path, ((menu_entry_exec *) selected)->flags);
+			start_efi_image(((menu_entry_exec *) selected)->path,
+				((menu_entry_exec *) selected)->flags);
 			break;
 		default:
 			break;
@@ -127,6 +134,5 @@ efi_main(efi_handle image_handle, efi_system_table *system_table)
 
 done:
 	menu_clearscreen();
-	fini_util();
 	return EFI_SUCCESS;
 }
