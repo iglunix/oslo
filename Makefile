@@ -1,3 +1,4 @@
+LIBEFI = ..
 include ../tools/Makefile.efi
 
 # Package specific C flags
