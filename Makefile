@@ -1,5 +1,5 @@
-LIBEFI = ..
-include ../tools/Makefile.efi
+LIBEFI = libefi
+include libefi/tools/Makefile.efi
 
 # Package specific C flags
 CFLAGS += -Iinclude
