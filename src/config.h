@@ -5,6 +5,6 @@
 #define ENTRIES_FILE_NAME L"\\efi\\yaub\\entries.ini"
 
 /* Read all boot entries */
-void get_entries(efi_size *returned_entries, menu_entry_exec ***entries);
+void add_boot_entries(menu_screen **menu);
 
 #endif

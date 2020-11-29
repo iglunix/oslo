@@ -7,8 +7,8 @@
 #include <efi.h>
 #include <efiutil.h>
 #include <khelper.h>
-#include <menu.h>
-#include <config.h>
+#include "menu.h"
+#include "config.h"
 
 /* Convert an ascii string to an EFI string */
 static efi_ch16 *ascii_str_to_efi(char *ascii_str, efi_size len)
@@ -64,8 +64,7 @@ static char *get_next_line(char *start)
 	return ++start;
 }
 
-static
-efi_status
+static efi_status
 locate_self_volume(efi_simple_file_system_protocol **self_volume)
 {
 	efi_status status;
@@ -85,7 +84,16 @@ locate_self_volume(efi_simple_file_system_protocol **self_volume)
 	return status;
 }
 
-void get_entries(efi_size *returned_entries, menu_entry_exec ***entries)
+static void
+sanity_check_entry(menu_entry *entry)
+{
+	if (!entry->text || !entry->path)
+		efi_abort(
+			L"Entries file is invalid! Please check!\n",
+			EFI_INVALID_PARAMETER);
+}
+
+void add_boot_entries(menu_screen **menu)
 {
 	efi_status status;
 
@@ -96,6 +104,9 @@ void get_entries(efi_size *returned_entries, menu_entry_exec ***entries)
 
 	char *next_line, *current_line;
 	efi_size current_line_length;
+
+	efi_bool have_entry;
+	menu_entry entry;
 
 	status = locate_self_volume(&self_volume);
 	if (EFI_ERROR(status))
@@ -136,8 +147,7 @@ void get_entries(efi_size *returned_entries, menu_entry_exec ***entries)
 			status);
 
 	/* Prepare */
-	*entries = NULL;
-	*returned_entries = 0;
+	have_entry = 0;
 
 	/* Iterate through the contents */
 	current_line = entries_contents;
@@ -151,36 +161,44 @@ void get_entries(efi_size *returned_entries, menu_entry_exec ***entries)
 		}
 
 		if (current_line[0] == '[') { /* New entry starts here */
-			*entries = efi_realloc(*entries, (*returned_entries) * sizeof(menu_entry_exec *),
-					(++(*returned_entries)) * sizeof(menu_entry_exec *));
+			if (have_entry) {
+				sanity_check_entry(&entry);
+				menu_add_entries(menu, &entry, 1);
+			} else {
+				have_entry = 1;
+			}
 
-			/* Fill the type field of the current entry */
-			(*entries)[(*returned_entries) - 1] = efi_alloc(sizeof(menu_entry_exec));
-			(*entries)[(*returned_entries) - 1]->base.type = menu_type_exec;
+			/* Initialize new entry */
+			entry.type = menu_type_exec;
+			entry.text = NULL;
+			entry.path = NULL;
+			entry.flags = NULL;
 
 			goto next;
 		}
 
-		if (*returned_entries < 1) { /* If we reach here without good entries something is bad */
-			efi_abort(L"Entries file is invalid! Please check!\n", EFI_INVALID_PARAMETER);
+		if (!have_entry) { /* Properties must be part of an entry */
+			efi_abort(
+				L"Entries file is invalid! Please check!\n",
+				EFI_INVALID_PARAMETER);
 		}
 
 		if (starts_with(current_line, "name="))
-			(*entries)[(*returned_entries) - 1]->base.text = ascii_str_to_efi(current_line + 5, current_line_length - 6);
+			entry.text = ascii_str_to_efi(current_line + 5, current_line_length - 6);
 		if (starts_with(current_line, "path="))
-			(*entries)[(*returned_entries) - 1]->path = ascii_str_to_efi(current_line + 5, current_line_length - 6);
+			entry.path = ascii_str_to_efi(current_line + 5, current_line_length - 6);
 		if (starts_with(current_line, "flags="))
-			(*entries)[(*returned_entries) - 1]->flags = ascii_str_to_efi(current_line + 6, current_line_length - 7);
+			entry.flags = ascii_str_to_efi(current_line + 6, current_line_length - 7);
 next:
 		/* Go to the next line */
 		current_line = next_line;
 	}
 
-	efi_free(entries_contents);
-
-	/* Check if all entries have the required fields */
-	for (efi_size index = 0; index < *returned_entries; ++index) {
-		if ((*entries)[index]->base.text == NULL || (*entries)[index]->path == NULL)
-			efi_abort(L"Entries file is invalid! Please check!\n", EFI_INVALID_PARAMETER);
+	/* Add final entry */
+	if (have_entry) {
+		sanity_check_entry(&entry);
+		menu_add_entries(menu, &entry, 1);
 	}
+
+	efi_free(entries_contents);
 }
