@@ -132,5 +132,6 @@ efi_main(efi_handle image_handle, efi_system_table *system_table)
 
 done:
 	menu_clearscreen();
+	efi_free(main_menu);
 	return EFI_SUCCESS;
 }
