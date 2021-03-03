@@ -1,0 +1,6 @@
+.ccls-cache
+.ninja*
+.cache
+*.o
+*.img
+*.bin
