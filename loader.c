@@ -1,6 +1,7 @@
-typedef  unsigned char uint8_t;
+typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
 
 #pragma pack(push)
 #pragma pack(1)
@@ -73,53 +74,49 @@ typedef union fs_fat32_fsinfo {
 	uint32_t trail_signature;
 } fs_fat32_fsinfo;
 
-
-/* 
- * This probably isn't going to work as is. I probably should be reading
- * the fs information seperately in a single pass; data should be sized
- * to make `fs_fat_t` a single sector making `fs_fat_load` only need 1
- * in AL
- */
-
-typedef struct fs_fat_t {
-	fs_fat_bpb_t bpb;
-	fs_fat_ebr_t ebr;
-	uint8_t data[1]; /* variable length */
+typedef union fs_fat_t {
+	struct {
+		fs_fat_bpb_t bpb;
+		fs_fat_ebr_t ebr;
+	} header;
+	/* Padding to make single sector */
+	uint8_t data[512];
 } fs_fat_t;
 
 #pragma pack(pop)
 
 int puts(char const *str);
+void puthex(unsigned char c);
+int putchar(int c);
 
 void disk_err() {
 	puts("Disk Error");
-	asm("hlt");
+//	asm("hlt");
 }
 
-void fs_fat_load(fs_fat_t *dest, uint8_t count, uint8_t cylinder, uint8_t sector, uint8_t head, uint8_t drive) {
+void fs_fat_load(fs_fat_t *dest, uint8_t cylinder, uint8_t sector, uint8_t head, uint8_t drive) {
 	asm(
 		"pushw %%dx;"
 		"movb $0x02,%%ah;"
-		"movb %0, %%al;"
-		"movb %1, %%ch;"
-		"movb %2, %%cl;"
-		"movb %3, %%dh;"
-		"movb %4, %%dl;"
-		"movw %5, %%bx;"
-		"movw %6, %%es;"
+		"movb $0x01, %%al;"
+		"movb %0, %%ch;"
+		"movb %1, %%cl;"
+		"movb %2, %%dh;"
+		"movb %3, %%dl;"
+		"movw %4, %%bx;"
+		"movw %5, %%es;"
 		"int $0x13;"
 		"jc disk_err;"
 		"popw %%dx;"
 		"cmpb %%al, %%dh;"
 		"jne disk_err;"
 		:
-		: "r" (count)
-		, "r" (cylinder)
+		: "r" (cylinder)
 		, "r" (sector)
 		, "r" (head)
 		, "r" (drive)
-		, "r" ((uint16_t) (((int) dest) >> 16))
-		, "r" ((uint16_t) dest)
+		, "r" ((uint16_t) (((uint64_t) dest) >> 16))
+		, "r" ((uint16_t) ((uint64_t) dest))
 	);
 }
 
@@ -159,19 +156,8 @@ void puthex(unsigned char c) {
 	putnibble((c & 0x0f));
 }
 
-#include <alloca.h>
-
 extern void loader_main() {
 	puts("OSLO Stage 2 Loaded!");
-	for (char *i = (char *) 0x7c00; i < (char*) (0x7c00 + 512); i++) {
-		puthex(*i);
-		putchar(' ');
-		if (((unsigned long) i) % 24 == 0) {
-			putchar('\r');
-			putchar('\n');
-		}
-	}
-	fs_fat_t *fat = alloca(sizeof(uint8_t) * 1024 * 1024);
-	fs_fat_load(fat, 0x1,  0, 1, 0, 0x80);
-	puts("read");
+	fs_fat_t fat;
+	fs_fat_load(&fat, 0, 1, 0, 0x80);
 }
