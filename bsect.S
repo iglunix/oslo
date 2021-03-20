@@ -14,9 +14,9 @@ movw $WELCOME_MSG, %bx
 call r_puts
 
 a20:
-    inb $0x92,%al
-    orb $2,%al
-    outb %al, $0x92
+	inb $0x92,%al
+	orb $2,%al
+	outb %al, $0x92
 
 etr_pmode:
 	cli
@@ -44,14 +44,14 @@ urmode:
 	pop %ds
 	sti
 
-    movw $UNREAL_MSG, %bx
-    call r_puts
+	movw $UNREAL_MSG, %bx
+	call r_puts
 	hlt
 
 disk_read:
-    movw $READING_MSG, %bx
-    call r_puts
-	movb $0x15,%dh
+	movw $READING_MSG, %bx
+	call r_puts
+	movb $0x10,%dh
 	pushw %dx
 	movw $STAGE2_OFFSET, %bx
 
@@ -78,26 +78,26 @@ spin:
 
 # Real mode print
 r_puts:
-    pusha
+	pusha
 
 r_puts.loop:
-    movb (%bx),%al
-    cmpb $0,%al
-    je r_puts.ret
-    movb $0x0E,%ah
-    int $0x10
-    incw %bx
-    jmp r_puts.loop
+	movb (%bx),%al
+	cmpb $0,%al
+	je r_puts.ret
+	movb $0x0E,%ah
+	int $0x10
+	incw %bx
+	jmp r_puts.loop
 
 r_puts.ret:
-    movb $0x0E,%ah
-    movb $0x0A,%al
-    int $0x10
-    movb $0x0D,%al
-    int $0x10
+	movb $0x0E,%ah
+	movb $0x0A,%al
+	int $0x10
+	movb $0x0D,%al
+	int $0x10
 
-    popa
-    ret
+	popa
+	ret
 
 disk_noerr:
 	movw $STG2_MSG, %bx
@@ -129,26 +129,26 @@ exec_stg2:
 	hlt
 
 gdt:
-    .quad 0x00000000
+	.quad 0x00000000
 gdt_code:
-    .word 0xffff
-    .word 0x0000
-    .byte 0x00
-    .byte 0b10011010
-    .byte 0b11001111
-    .byte 0x00
+	.word 0xffff
+	.word 0x0000
+	.byte 0x00
+	.byte 0b10011010
+	.byte 0b11001111
+	.byte 0x00
 gdt_data:
-    .word 0xffff
-    .word 0x0000
-    .byte 0x00
-    .byte 0b10010010
-    .byte 0b11001111
-    .byte 0x00
+	.word 0xffff
+	.word 0x0000
+	.byte 0x00
+	.byte 0b10010010
+	.byte 0b11001111
+	.byte 0x00
 gdt_end:
 
 gdt_desc:
-    .word gdt_end-gdt-1
-    .quad gdt
+	.word gdt_end-gdt-1
+	.quad gdt
 
 .equ codeseg, gdt_code - gdt
 .equ dataseg, gdt_data - gdt

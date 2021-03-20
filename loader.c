@@ -162,6 +162,17 @@ void vga_puts(vga_t *self, char const *s) {
 	vga_putc(self, '\n');
 }
 
+void vga_pretty_byte(vga_t *self, uint8_t v) {
+	char map[] = {
+		'0', '1', '2', '3',
+		'4', '5', '6', '7',
+		'8', '9', 'A', 'B',
+		'C', 'D', 'E', 'F'
+	};
+	vga_putc(self, map[v >> 4]);
+	vga_putc(self, map[v & 0x0f]);
+}
+
 /*int puts(char const *str) {
 	for (int i = 0; str[i]; i++) {
 		char c = str[i];
@@ -191,6 +202,10 @@ int main() {
 	vga_t vga = vga_init();
 	vga_puts(&vga, "Welcome to OSLO!");
 	vga_puts(&vga, "OSLO is WIP");
+
+	for (int i = 0; i < 16; i++) {
+		vga_pretty_byte(&vga, ((uint8_t *) 0x7C00)[i]);
+	}
 
 //	fs_fat_t fat;
 //	fs_fat_load(&fat, 0, 1, 0, 0x80);
