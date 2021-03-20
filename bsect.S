@@ -123,6 +123,8 @@ enter_protected:
     outb %al, $0x92
 
     cli
+	push %ds
+
     lgdt gdt_desc
 
     mov %cr0,%eax
@@ -138,12 +140,22 @@ start_protect:
     mov $0x10, %ax
 
     mov %ax, %ds
-    mov %ax, %ss
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
 
-	movb $71, 0xb8000
+# TODO:
+# move to unreal mode and do before
+# loading from disk and load 64M (or more)
+# from disk. This will be decoded by the FAT
+# driver later
+
+#	and $0xfe, %al
+#	mov %eax, %cr0
+
+#	pop %ds
+#	sti
+#	mov %ax, %ss
+#	mov %ax, %es
+#	mov %ax, %fs
+#	mov %ax, %gs
 
 	jmp jmp_to_stg2
 

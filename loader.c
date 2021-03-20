@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "disk.h"
+
 // /*#pragma pack(push)
 // #pragma pack(1)
 
@@ -138,7 +140,7 @@ vga_t vga_init() {
 	vga_t ret = {
 		.line = 0,
 		.col = 0,
-		.buf = (uint16_t *)0xb8000,
+		.buf = (uint16_t *) 0xb8000,
 	};
 	return ret;
 }
@@ -148,7 +150,7 @@ void vga_putc(vga_t *self, char c) {
 		self->line++;
 		self->col = 0;
 	} else {
-		self->buf[self->col + self->line * VGA_WIDTH] = 0x0f00 | c;
+		self->buf[self->col + self->line * VGA_WIDTH] = 0x0300 | c;
 		self->col++;
 	}
 }
@@ -157,6 +159,7 @@ void vga_puts(vga_t *self, char const *s) {
 	for (;*s;s++) {
 		vga_putc(self, *s);
 	}
+	vga_putc(self, '\n');
 }
 
 /*int puts(char const *str) {
@@ -184,13 +187,14 @@ void puthex(unsigned char c) {
 	putnibble((c & 0x0f));
 }*/
 
-
-
-void main() {
+int main() {
 	vga_t vga = vga_init();
-	vga_puts(&vga, "Welcome to OSLO!\nLoking for vmlinuz");
+	vga_puts(&vga, "Welcome to OSLO!");
+	vga_puts(&vga, "OSLO is WIP");
+
 //	fs_fat_t fat;
 //	fs_fat_load(&fat, 0, 1, 0, 0x80);
+	return 0;
 }
 
 extern void _start() {

@@ -5,7 +5,7 @@ rule ldbsect
     command = ld.lld --oformat binary -o $out -Ttext 0x7C00 $in
 
 rule cc
-    command = clang -O0 -m32 -target i686-unknown-none-none -ffreestanding -c $in -o $out
+    command = clang -m32 -target i686-unknown-none-none -ffreestanding -c $in -o $out
 
 rule ld
     command = ld.lld -o $out -m elf_i386 -Ttext 0x1000 $in --oformat binary
@@ -26,8 +26,9 @@ build bsect.o: as bsect.S
 build bsect.bin: ldbsect bsect.o
 
 build loader.o: cc loader.c
+build disk.o: cc disk.c
 build boot.o: as boot.S
-build boot.bin: ld boot.o loader.o
+build boot.bin: ld boot.o loader.o disk.o
 build fat.img: fat
 
 build oslo.bin: cat bsect.bin boot.bin
