@@ -1,11 +1,11 @@
 rule as
-    command = clang -c -m16 $in -o $out
+    command = clang -c -m32 $in -o $out
 
 rule ldbsect
     command = ld.lld --oformat binary -o $out -Ttext 0x7C00 $in
 
 rule cc
-    command = clang -O0 -m16 -target i686-unknown-none-none -ffreestanding -c $in -o $out
+    command = clang -O0 -m32 -target i686-unknown-none-none -ffreestanding -c $in -o $out
 
 rule ld
     command = ld.lld -o $out -m elf_i386 -Ttext 0x1000 $in --oformat binary

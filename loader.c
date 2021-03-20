@@ -120,14 +120,21 @@ void fs_fat_load(fs_fat_t *dest, uint8_t cylinder, uint8_t sector, uint8_t head,
 	);
 }
 
+int line = 0;
+int col = 0;
+int width = 80;
+
 int putchar(int c) {
-	asm(
+/*	asm(
 		"mov %0, %%al;"
 		"mov $0x0E, %%ah;"
 		"int $0x10;"
 		:
 		: "r" ((char) c)
-	);
+	);*/
+	uint16_t *term_buf = (uint16_t *)0xb8000;
+	*term_buf = 0x71;
+	col++;
 	return 0;
 }
 
@@ -156,8 +163,15 @@ void puthex(unsigned char c) {
 	putnibble((c & 0x0f));
 }
 
-extern void loader_main() {
-	puts("OSLO Stage 2 Loaded!");
-	fs_fat_t fat;
-	fs_fat_load(&fat, 0, 1, 0, 0x80);
+
+
+void main() {
+	putchar('X');
+//	puts("OSLO Stage 2 Loaded!");
+//	fs_fat_t fat;
+//	fs_fat_load(&fat, 0, 1, 0, 0x80);
+}
+
+extern void _start() {
+	main();
 }
