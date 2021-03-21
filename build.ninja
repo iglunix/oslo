@@ -10,11 +10,11 @@ rule cc
 rule ld
     command = ld.lld -o $out -m elf_i386 -Ttext 0x1000 $in --oformat binary
 
-rule pad
-    command = dd if=$in of=$out count=4
-
 rule fat
     command = dd if=/dev/zero of=$out count=2048 && mkfs.vfat -n "TestFAT" $out
+
+rule cat2k
+    command = cat $in > $out && truncate -s 2K $out
 
 rule cat
     command = cat $in > $out
@@ -27,14 +27,16 @@ build bsect.bin: ldbsect bsect.o
 
 build loader.o: cc loader.c
 build disk.o: cc disk.c
+build vga.o: cc vga.c
 build boot.o: as boot.S
-build boot.bin: ld boot.o loader.o disk.o
-build fat.img: fat
+build boot.bin: ld boot.o loader.o disk.o vga.o
+#build fat.img: fat
 
-build oslo.bin: cat bsect.bin boot.bin
-build oslo.img: pad oslo.bin
+build oslo.bin: cat2k bsect.bin boot.bin
 
-build disk.img: cat oslo.img fat.img
+#build oslo.img: pad oslo.bin
+
+build disk.img: cat oslo.bin fat.img
 
 build qemu: qemu disk.img
 

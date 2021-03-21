@@ -74,6 +74,7 @@ disk_err:
 	movw $DISK_ERR_MSG, %bx
 	call r_puts
 spin:
+	hlt
 	jmp spin
 
 # Real mode print
@@ -109,20 +110,16 @@ disk_noerr:
 	mov %eax,%cr0
 
 	ljmp $codeseg,$exec_stg2
-#	jmp exec_stg2
 
 .code32
 
 exec_stg2:
-	movb $71, 0xb8002
-
 	mov $0x10, %ax
 	mov %ax, %ds
 	mov %ax, %es
 	mov %ax, %ss
 	mov %ax, %fs
 	mov %ax, %gs
-
 
 	jmp STAGE2_OFFSET
 
