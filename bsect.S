@@ -51,7 +51,7 @@ urmode:
 disk_read:
 	movw $READING_MSG, %bx
 	call r_puts
-	movb $0x10,%dh
+	movb $0x35,%dh
 	pushw %dx
 	movw $STAGE2_OFFSET, %bx
 

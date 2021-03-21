@@ -1,0 +1,62 @@
+[
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -c -m32 bsect.S -o bsect.o",
+    "file": "bsect.S",
+    "output": "bsect.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "ld.lld --oformat binary -o bsect.bin -Ttext 0x7C00 bsect.o",
+    "file": "bsect.o",
+    "output": "bsect.bin"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -m32 -target i686-unknown-none-none -ffreestanding -c loader.c -o loader.o",
+    "file": "loader.c",
+    "output": "loader.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -m32 -target i686-unknown-none-none -ffreestanding -c disk.c -o disk.o",
+    "file": "disk.c",
+    "output": "disk.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -m32 -target i686-unknown-none-none -ffreestanding -c vga.c -o vga.o",
+    "file": "vga.c",
+    "output": "vga.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -c -m32 boot.S -o boot.o",
+    "file": "boot.S",
+    "output": "boot.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x1000 boot.o loader.o disk.o vga.o --oformat binary",
+    "file": "boot.o",
+    "output": "boot.bin"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "cat bsect.bin boot.bin > oslo.bin && truncate -s 2K oslo.bin",
+    "file": "bsect.bin",
+    "output": "oslo.bin"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "cat oslo.bin fat.img > disk.img",
+    "file": "oslo.bin",
+    "output": "disk.img"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "qemu-system-x86_64 -enable-kvm -fda disk.img",
+    "file": "disk.img",
+    "output": "qemu"
+  }
+]
