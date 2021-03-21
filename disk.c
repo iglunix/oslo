@@ -20,6 +20,24 @@ struct fat_t fat_new(size_t offset) {
 		/* - 0x200 because 0x1000 is start of second sector */
 		.buf = (fat_bs_t *) ((uint8_t *) 0x1000 + offset - 0x200)
 	};
+	uint32_t total_sectors = (ret.buf->total_sectors == 0)? ret.buf->total_sectors_32 : ret.buf->total_sectors;
+	uint32_t fat_size = (ret.buf->tbl_size == 0)? ret.buf->ext.fat32.tbl_size : ret.buf->tbl_size;
+	uint16_t root_dir_sectors = ((ret.buf->root_ent_count * 32) + (ret.buf->sector_size - 1)) / ret.buf->sector_size;
+	uint32_t first_data_sector = ret.buf->reserved_sector_count + (ret.buf->tbl_count * fat_size) + root_dir_sectors;
+	uint16_t first_fat_sector = ret.buf->reserved_sector_count;
+	uint32_t data_sectors = ret.buf->total_sectors - (ret.buf->reserved_sector_count + (ret.buf->tbl_count * fat_size) + root_dir_sectors);
+	uint32_t total_clusters = data_sectors / ret.buf->sector_size;
+
+	if (total_clusters < 4085) {
+		ret.type = FAT_12;
+	} else if (total_clusters < 65525) {
+		ret.type = FAT_16;
+	} else if (total_clusters < 268435445) {
+		ret.type = FAT_32;
+	} else {
+		ret.type = UNKNOWN; /*exfat*/
+	}
+
 	return ret;
 }
 

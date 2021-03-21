@@ -15,7 +15,7 @@ uint8_t *disk_read(disk_t *self, size_t *count);
 #pragma pack(1)
 
 typedef struct fat_bs_ext_32_t {
-	int8_t v;
+	uint32_t tbl_size;
 } __attribute__((packed)) fat_bs_ext_32_t;
 
 typedef struct fat_bs_ext_16_t {
@@ -47,11 +47,18 @@ typedef struct fat_bs_t {
 
 #pragma pack(pop)
 
-typedef struct fat_t fat_t;
 
-struct fat_t {
+typedef enum fat_type_t {
+	UNKNOWN = 0,
+	FAT_12,
+	FAT_16,
+	FAT_32,
+} fat_type_t;
+
+typedef struct fat_t {
 	fat_bs_t const *buf;
-};
+	fat_type_t type;
+} fat_t;
 
 /*
  * offset is 0x800 if starting at sector 4

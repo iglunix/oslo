@@ -10,6 +10,9 @@ int main() {
 	fat_t boot_part = fat_new(0x1000);
 	fat_oem(&boot_part, &vga);
 	fat_ls(&boot_part, &vga);
+	vga_putc(&vga, '\n');
+	vga_pretty_byte(&vga, boot_part.type);
+
 //	fat_dump(&boot_part, &vga, 0, 0x200);
 /*	fat_ls(&boot_part, &vga);
 	uint16_t sector_size = fat_sector_size(&boot_part);
