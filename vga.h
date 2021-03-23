@@ -14,6 +14,7 @@ vga_t vga_init();
 void vga_putc(vga_t *, char);
 void vga_puts(vga_t *, char const *);
 void vga_pretty_byte(vga_t *, uint8_t);
+void vga_printf(vga_t *, char const *fmt, ...);
 
 #endif // vga_h_INCLUDED
 

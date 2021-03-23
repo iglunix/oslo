@@ -58,6 +58,13 @@ typedef enum fat_type_t {
 typedef struct fat_t {
 	fat_bs_t const *buf;
 	fat_type_t type;
+	uint32_t total_sectors;
+	uint32_t fat_size;
+	uint16_t root_dir_sectors;
+	uint32_t first_data_sector;
+	uint16_t first_fat_sector;
+	uint32_t data_sectors;
+	uint32_t total_clusters;
 } fat_t;
 
 /*
@@ -121,5 +128,11 @@ uint32_t fat_size(fat_t const *self);
  */
 
 uint16_t fat_dirent_count(fat_t const *self);
+
+/*
+ * FAT tbl lookup
+ */
+
+void fat_lookup(fat_t const *self, vga_t *vga);
 
 #endif

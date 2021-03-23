@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "disk.h"
 
 struct mbr_t {
@@ -20,19 +21,19 @@ struct fat_t fat_new(size_t offset) {
 		/* - 0x200 because 0x1000 is start of second sector */
 		.buf = (fat_bs_t *) ((uint8_t *) 0x1000 + offset - 0x200)
 	};
-	uint32_t total_sectors = (ret.buf->total_sectors == 0)? ret.buf->total_sectors_32 : ret.buf->total_sectors;
-	uint32_t fat_size = (ret.buf->tbl_size == 0)? ret.buf->ext.fat32.tbl_size : ret.buf->tbl_size;
-	uint16_t root_dir_sectors = ((ret.buf->root_ent_count * 32) + (ret.buf->sector_size - 1)) / ret.buf->sector_size;
-	uint32_t first_data_sector = ret.buf->reserved_sector_count + (ret.buf->tbl_count * fat_size) + root_dir_sectors;
-	uint16_t first_fat_sector = ret.buf->reserved_sector_count;
-	uint32_t data_sectors = ret.buf->total_sectors - (ret.buf->reserved_sector_count + (ret.buf->tbl_count * fat_size) + root_dir_sectors);
-	uint32_t total_clusters = data_sectors / ret.buf->sector_size;
+    ret.total_sectors = (ret.buf->total_sectors == 0)? ret.buf->total_sectors_32 : ret.buf->total_sectors;
+	ret.fat_size = (ret.buf->tbl_size == 0)? ret.buf->ext.fat32.tbl_size : ret.buf->tbl_size;
+	ret.root_dir_sectors = ((ret.buf->root_ent_count * 32) + (ret.buf->sector_size - 1)) / ret.buf->sector_size;
+    ret.first_data_sector = ret.buf->reserved_sector_count + (ret.buf->tbl_count * ret.fat_size) + ret.root_dir_sectors;
+	ret.first_fat_sector = ret.buf->reserved_sector_count;
+	ret.data_sectors = ret.buf->total_sectors - (ret.buf->reserved_sector_count + (ret.buf->tbl_count * ret.fat_size) + ret.root_dir_sectors);
+	ret.total_clusters = ret.data_sectors / ret.buf->sector_size;
 
-	if (total_clusters < 4085) {
+	if (ret.total_clusters < 4085) {
 		ret.type = FAT_12;
-	} else if (total_clusters < 65525) {
+	} else if (ret.total_clusters < 65525) {
 		ret.type = FAT_16;
-	} else if (total_clusters < 268435445) {
+	} else if (ret.total_clusters < 268435445) {
 		ret.type = FAT_32;
 	} else {
 		ret.type = UNKNOWN; /*exfat*/
@@ -63,54 +64,89 @@ void fat_oem(fat_t const *self, vga_t *vga) {
 	vga_putc(vga, '\n');
 }
 
+void fat_lookup(fat_t const *self, vga_t *vga) {
+//	uint8_t FAT_table[self->buf->sector_size];
+	uint32_t fat_offset;
+	uint32_t active_cluster = 0;
+	switch (self->type) {
+		case FAT_12:
+			fat_offset = active_cluster + (active_cluster / 2);
+			break;
+		case FAT_16:
+			fat_offset = active_cluster * 2;
+			break;
+		case FAT_32:
+			fat_offset = active_cluster * 4;
+			break;
+		case UNKNOWN:
+			vga_puts(vga, "Error: Unknown FAT Type");
+			break;
+	}
+	uint32_t first_fat_sector = 0x08;
+	uint32_t fat_sector = first_fat_sector + (fat_offset / self->buf->sector_size);
+	uint32_t ent_offset = fat_offset % self->buf->sector_size;
+
+	vga_pretty_byte(vga, ent_offset>>24);
+	vga_pretty_byte(vga, ent_offset>>16);
+	vga_pretty_byte(vga, ent_offset>>8);
+	vga_pretty_byte(vga, ent_offset);
+}
+
+/*
+ * TODO:
+ */
+
+typedef union fat_dir_t {
+	uint8_t raw[32];
+	struct {
+
+	} data;
+	struct {
+
+	} long_name;
+} __attribute__((packed)) fat_dir_t;
+
 void fat_ls(fat_t const *self, vga_t *vga) {
 	uint16_t reserved = self->buf->reserved_sector_count;
 	uint8_t table_count = self->buf->tbl_count;
 	uint32_t fat_tbl_size = self->buf->tbl_size;
 	size_t root_offset = reserved + table_count * fat_tbl_size;
 
-	vga_pretty_byte(vga, root_offset>>24);
-	vga_pretty_byte(vga, root_offset>>16);
-	vga_pretty_byte(vga, root_offset>>8);
-	vga_pretty_byte(vga, root_offset);
-	
-//	size_t root_offset = fat_boot->reserved_sector_count + (fat_boot->table_count * fat_size);
+	uint32_t first_root_dir_sector = self->first_data_sector - self->root_dir_sectors;
+
+	uint8_t *root_dir_buf = (uint8_t *) self->buf + root_offset * 512;
+
+	vga_printf(vga, "fat_ls: %h", self->buf + root_offset * 512);
+	vga_putc(vga, '\n');
+
+	bool has_long_name = false;
+	char long_name[32];
+
+	for (size_t i = 0; root_dir_buf[i * 32]; i++) {
+		/* test for unused */
+		if (root_dir_buf[i * 32] != 0xe5) {
+			/* check for long file names */
+			if (root_dir_buf[i * 32 + 11] == 0x0f) {
+				has_long_name = true;
+				for (size_t j = 0; j < 5; j++) {
+					uint16_t *char_buf = (uint16_t *)(root_dir_buf + i * 32 + 1);
+					long_name[j] = char_buf[j];
+				}
+				for (size_t j = 0; j < 6; j++) {
+					long_name[j + 5] = root_dir_buf[i * 32 + 14 + j * 2];
+				}
+				for (size_t j = 0; j < 2; j++) {
+					long_name[j + 11] = root_dir_buf[i * 32 + 28 + j * 2];
+				}
+			} else if (has_long_name) {
+					vga_printf(vga, "  %s\n", long_name);
+					has_long_name = false;
+			} else {
+				vga_printf(vga, "  ");
+				for (size_t j = 0; j < 11; j++)
+					vga_putc(vga, root_dir_buf[i * 32 + j]);
+				vga_putc(vga, '\n');
+			}
+		}
+	}
 }
-
-/*
-
-uint16_t fat_sector_size(fat_t const *self) {
-	uint16_t ret = 0;
-	ret = self->buf[0x0B];
-	ret |= self->buf[0x0B + 1] << 8;
-	return ret;
-}
-
-uint8_t fat_cluster_size(fat_t const *self) {
-	return self->buf[0x0D];
-}
-
-uint16_t fat_reserved_count(fat_t const *self) {
-	uint16_t ret = 0;
-	ret = self->buf[0x0E];
-	ret |= self->buf[0x0E + 1] << 8;
-	return ret;
-}
-
-uint16_t fat_dirent_count(fat_t const *self) {
-	uint16_t ret = 0;
-	ret = self->buf[0x11];
-	ret |= self->buf[0x11 + 1] << 8;
-	return ret;
-}
-
-uint8_t fat_table_count(fat_t const *self) {
-	return self->buf[0x10];
-}
-
-uint32_t fat_size(fat_t const *self) {
-	return (*(uint16_t *)(self->buf + 0x13) == 0)? *(uint32_t *)(self->buf + 0x20) : *(uint16_t *)(self->buf + 0x13);
-}
-
-
-*/

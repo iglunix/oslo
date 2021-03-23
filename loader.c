@@ -11,7 +11,9 @@ int main() {
 	fat_oem(&boot_part, &vga);
 	fat_ls(&boot_part, &vga);
 	vga_putc(&vga, '\n');
-	vga_pretty_byte(&vga, boot_part.type);
+//	vga_pretty_byte(&vga, boot_part.type);
+//	fat_lookup(&boot_part, &vga);
+//	vga_printf(&vga, "%s:%d\n", "Hello, World!", -3212343);
 
 //	fat_dump(&boot_part, &vga, 0, 0x200);
 /*	fat_ls(&boot_part, &vga);
