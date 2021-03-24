@@ -48,17 +48,28 @@ urmode:
 	call r_puts
 	hlt
 
+# TODO, Read more
 disk_read:
+#	movw $READING_MSG, %bx
+#	call r_puts
+#	movb $0x35,%dh
+#	movb $0x1,%dh
+#	pushw %dx
+	movw $STAGE2_OFFSET, %bx
+	movb $0x02,%cl
+disk_read.loop:
+
+	movb $0x1,%dh
+	pushw %dx
+
+	pushw %bx
 	movw $READING_MSG, %bx
 	call r_puts
-	movb $0x35,%dh
-	pushw %dx
-	movw $STAGE2_OFFSET, %bx
+	popw %bx
 
 	movb $0x02,%ah
 	movb %dh,%al
 	movb $0x00,%ch
-	movb $0x02,%cl
 	movb $0x00,%dh
 	movb $0x00,%dl
 	int $0x13
@@ -68,6 +79,13 @@ disk_read:
 	popw %dx
 	cmpb %al,%dh
 	jne disk_err
+
+	add $512,%bx
+	add $1,%cl
+
+	cmp $0x20,%cl
+	jne disk_read.loop
+
 	jmp disk_noerr
 
 disk_err:

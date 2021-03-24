@@ -11,11 +11,6 @@ struct mbr_t {
 	} entries[4];
 };
 
-struct mbr_t *cast_mbr(uint8_t *mbr) {
-	return 0;
-}
-
-
 struct fat_t fat_new(size_t offset) {
 	fat_t ret = {
 		/* - 0x200 because 0x1000 is start of second sector */
@@ -64,7 +59,7 @@ void fat_oem(fat_t const *self, vga_t *vga) {
 	vga_putc(vga, '\n');
 }
 
-void fat_lookup(fat_t const *self, vga_t *vga) {
+/*void fat_lookup(fat_t const *self, vga_t *vga) {
 //	uint8_t FAT_table[self->buf->sector_size];
 	uint32_t fat_offset;
 	uint32_t active_cluster = 0;
@@ -90,7 +85,7 @@ void fat_lookup(fat_t const *self, vga_t *vga) {
 	vga_pretty_byte(vga, ent_offset>>16);
 	vga_pretty_byte(vga, ent_offset>>8);
 	vga_pretty_byte(vga, ent_offset);
-}
+}*/
 
 /*
  * TODO:
@@ -105,6 +100,8 @@ typedef union fat_dir_t {
 
 	} long_name;
 } __attribute__((packed)) fat_dir_t;
+
+void fat_find(fat_t const *self, uint8_t **oslocfg, uint8_t **vmlinuz, uint8_t **initrd);
 
 void fat_ls(fat_t const *self, vga_t *vga) {
 	uint16_t reserved = self->buf->reserved_sector_count;
@@ -139,14 +136,35 @@ void fat_ls(fat_t const *self, vga_t *vga) {
 					long_name[j + 11] = root_dir_buf[i * 32 + 28 + j * 2];
 				}
 			} else if (has_long_name) {
-					vga_printf(vga, "  %s\n", long_name);
-					has_long_name = false;
+				vga_printf(vga, "  %s\n", long_name);
+				has_long_name = false;
 			} else {
 				vga_printf(vga, "  ");
 				for (size_t j = 0; j < 11; j++)
 					vga_putc(vga, root_dir_buf[i * 32 + j]);
 				vga_putc(vga, '\n');
 			}
+			/* check if not volume id */
+			if (!(root_dir_buf[i * 32 + 11] & 0x08)) {
+				size_t offset = (self->first_data_sector + (root_dir_buf[i * 32 + 26] - 2) * self->buf->cluster_size) * 512;
+				uint8_t *ptr = (uint8_t *)self->buf + offset;
+				vga_printf(vga, "data: %h\n", offset);
+				vga_puts(vga, (char const *)ptr);
+			}
 		}
 	}
 }
+// TODO Maybe?
+// void int32h_disk_read() {
+// 	/* protected to real */
+// 	asm("cli":);
+// 	/* save stack */
+// 	void *stack;
+// 	asm("movl %%esp,%0" : "=r"(stack));
+
+
+
+// 	/* restore stack */
+// 	asm("movl %0, %%esp" :: "r" (stack));
+	
+// }

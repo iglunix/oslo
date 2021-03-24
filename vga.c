@@ -63,7 +63,7 @@ void vga_pretty_int(vga_t *self, int32_t n) {
 			rem /= 10;
 		}
 	}
-	for (i--;digits[i];i--) vga_putc(self, digits[i]);
+	for (i--;digits[i] >= '0' && digits[i] <= '9';i--) vga_putc(self, digits[i]);
 }
 
 void vga_pretty_hex(vga_t *self, uint32_t i) {
