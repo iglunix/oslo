@@ -13,8 +13,8 @@ struct mbr_t {
 
 struct fat_t fat_new(size_t offset) {
 	fat_t ret = {
-		/* - 0x200 because 0x1000 is start of second sector */
-		.buf = (fat_bs_t *) ((uint8_t *) 0x1000 + offset - 0x200)
+		/* - 0x200 because 0x8000 is start of second sector */
+		.buf = (fat_bs_t *) ((uint8_t *) 0x8000 + offset - 0x200)
 	};
     ret.total_sectors = (ret.buf->total_sectors == 0)? ret.buf->total_sectors_32 : ret.buf->total_sectors;
 	ret.fat_size = (ret.buf->tbl_size == 0)? ret.buf->ext.fat32.tbl_size : ret.buf->tbl_size;
@@ -154,17 +154,71 @@ void fat_ls(fat_t const *self, vga_t *vga) {
 		}
 	}
 }
-// TODO Maybe?
-// void int32h_disk_read() {
-// 	/* protected to real */
-// 	asm("cli":);
-// 	/* save stack */
-// 	void *stack;
-// 	asm("movl %%esp,%0" : "=r"(stack));
 
+#define real_seg(x) ((uint16_t)(((int)x & 0xffff0) >> 4))
+#define real_off(x) ((uint16_t)(((int)x & 0x0000f) >> 0))
 
+void int13h_disk_read(vga_t *vga, uint8_t *dest) {
+	vga_printf(vga, "%h:", (uint32_t) real_seg(0xf000));
+	vga_printf(vga, "%h\n", (uint32_t) real_off(0xf000));
 
-// 	/* restore stack */
-// 	asm("movl %0, %%esp" :: "r" (stack));
-	
-// }
+	asm(
+		"push %esp\n"
+
+		"ljmp $0x08,$b16 \n"
+	".code16\n"
+	"b16: \n"
+
+		"mov $0x10,%ax\n"
+		"mov %ax,%ds\n"
+		"mov %ax,%es\n"
+
+		"mov %cr0,%eax\n"
+		"and $0xfe,%al\n"
+		"mov %eax,%cr0\n"
+	".code32\n"
+
+		"ljmp $0x00,$cs0 \n"
+	".code16\n"
+	"cs0:"
+
+		"xor %ax,%ax\n"
+		"mov %ax,%es\n"
+		"mov $0xf000,%ebx\n"
+		"mov $0x0080,%edx\n"
+
+		"movb $0x02,%ah\n"
+		"movb $0x01,%al\n"
+		"movb $0x00,%ch\n"
+		"movb $0x02,%cl\n"
+		"movb $0x00,%dh\n"
+		"movb $0x80,%dl\n"
+		"mov $0x0080,%dx\n"
+
+		"sti \n"
+		"int $0x13\n"
+		"cli \n"
+		"hlt \n"
+
+		"mov %cr0,%eax\n"
+		"or $0x1,%al\n"
+		"mov %eax,%cr0\n"
+	".code32\n"
+		"ljmp $0x08,$b32 \n"
+	"b32:"
+
+		"mov $0x10,%ax\n"
+		"mov %ax,%ds\n"
+		"mov %ax,%es\n"
+		"mov %ax,%fs\n"
+		"mov %ax,%gs\n"
+		"mov %ax,%ss\n"
+
+		"jmp asm_end \n"
+
+	"asm_end:"
+		"pop %esp \n"
+	);
+
+	vga_puts(vga, "Read some disk");
+}

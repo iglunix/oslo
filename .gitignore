@@ -4,4 +4,6 @@
 *.o
 *.img
 *.bin
+*.efi
+*.lib
 bochs.conf

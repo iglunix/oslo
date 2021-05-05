@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "vga.h"
+#include <dev/vga.h>
 
 typedef struct mbr_t mbr_t;
 
@@ -37,7 +37,7 @@ typedef struct fat_bs_t {
 	uint16_t head_size_count;
 	uint32_t hidden_sector_count;
 	uint32_t total_sectors_32;
-	
+
 	union {
 		uint8_t pad[54];
 		fat_bs_ext_16_t fat16;
@@ -134,5 +134,11 @@ uint16_t fat_dirent_count(fat_t const *self);
  */
 
 void fat_lookup(fat_t const *self, vga_t *vga);
+
+/*
+ * read disk using bios interupt
+ */
+
+void int13h_disk_read(vga_t *, uint8_t *dest);
 
 #endif

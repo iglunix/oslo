@@ -13,21 +13,33 @@
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -m32 -target i686-unknown-none-none -ffreestanding -c loader.c -o loader.o",
+    "command": "clang -I. -MD -MF main.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c main.c -o main.o",
+    "file": "main.c",
+    "output": "main.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -MD -MF loader.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c loader.c -o loader.o",
     "file": "loader.c",
     "output": "loader.o"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -m32 -target i686-unknown-none-none -ffreestanding -c disk.c -o disk.o",
-    "file": "disk.c",
-    "output": "disk.o"
+    "command": "clang -I. -MD -MF dev/pci.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c dev/pci.c -o dev/pci.o",
+    "file": "dev/pci.c",
+    "output": "dev/pci.o"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -m32 -target i686-unknown-none-none -ffreestanding -c vga.c -o vga.o",
-    "file": "vga.c",
-    "output": "vga.o"
+    "command": "clang -I. -MD -MF dev/serial.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c dev/serial.c -o dev/serial.o",
+    "file": "dev/serial.c",
+    "output": "dev/serial.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -MD -MF dev/vga.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c dev/vga.c -o dev/vga.o",
+    "file": "dev/vga.c",
+    "output": "dev/vga.o"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
@@ -37,25 +49,25 @@
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x1000 boot.o loader.o disk.o vga.o --oformat binary",
+    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x1000 -T oslo.ld boot.o loader.o main.o dev/pci.o dev/vga.o dev/serial.o --oformat binary",
     "file": "boot.o",
     "output": "boot.bin"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "cat bsect.bin boot.bin > oslo.bin && truncate -s 2K oslo.bin",
+    "command": "cat bsect.bin boot.bin > oslo.bin && truncate -s 16K oslo.bin",
     "file": "bsect.bin",
     "output": "oslo.bin"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "cat oslo.bin fat.img > disk.img",
+    "command": "cat oslo.bin > disk.img",
     "file": "oslo.bin",
     "output": "disk.img"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "qemu-system-x86_64 -enable-kvm -fda disk.img",
+    "command": "qemu-system-x86_64 -hda disk.img -enable-kvm -serial stdio",
     "file": "disk.img",
     "output": "qemu"
   }
