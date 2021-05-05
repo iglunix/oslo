@@ -7,3 +7,4 @@
 *.efi
 *.lib
 bochs.conf
+*.d
