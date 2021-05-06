@@ -69,19 +69,18 @@ static uint8_t pci_get_class(uint8_t bus, uint8_t slot) {
 
 static void check_all_busses() {
 	for (uint16_t bus = 0; bus < 256; bus++) {
-		for (uint8_t slot = 0; slot < 32; slot++) {
+		for (uint8_t slot = 0; slot < 8; slot++) {
 			uint16_t id = pci_get_vendor_id(bus, slot);
 			if (id != 0xffff) {
-				vga_pretty_u16(id);
-				vga_putchar(' ');
-				uint16_t dev_id = pci_get_device_id(bus, slot);
-				vga_pretty_u16(dev_id);
-				uint8_t class = pci_get_class(bus, slot);
-				vga_putchar(' ');
-				vga_puts(pci_class_names[class]);
+				vga_printf("%xh:%xhh %xh:%xh %s\n",
+					bus, slot,
+					id, pci_get_device_id(bus, slot),
+					pci_class_names[pci_get_class(bus, slot)]
+				);
 			}
 		}
 	}
+	vga_puts("Enumerated all devices");
 }
 
 int pci_init() {

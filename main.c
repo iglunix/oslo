@@ -10,7 +10,6 @@ int x = 0;
 char const *msg = "Hello  World!";
 
 int main() {
-	vga_t vga;
 	if (vga_init())
 	 	return 1;
 

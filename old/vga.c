@@ -92,8 +92,8 @@ void vga_printf(vga_t *self, char const *s, ...) {
 						char const *str = va_arg(va, char const *);
 						for (;*str;str++) vga_putc(self, *str);
 						break;
-					case 'H':
-					case 'h':
+					case 'X':
+					case 'x':
 						;
 						uint32_t h = va_arg(va, uint32_t);
 						vga_pretty_hex(self, h);

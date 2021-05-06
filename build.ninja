@@ -7,7 +7,7 @@ rule ldbsect
 rule cc
     deps = gcc
     depfile = $out.d
-    command = clang -I. -MD -MF $out.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c $in -o $out
+    command = clang -I. -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -Wall -MD -MF $out.d -c $in -o $out
 
 rule ld
     command = ld.lld -o $out -m elf_i386 -Ttext 0x1000 -T oslo.ld $in --oformat binary

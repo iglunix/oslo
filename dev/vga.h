@@ -12,7 +12,7 @@ typedef struct vga_t {
 int vga_init();
 void vga_putchar(char);
 void vga_puts(char const *);
-void vga_pretty_byte(uint8_t);
+void vga_pretty_u8(uint8_t);
 void vga_pretty_u32(uint32_t);
 void vga_pretty_u16(uint16_t);
 void vga_printf(char const *fmt, ...);

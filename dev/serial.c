@@ -17,6 +17,8 @@ int serial_init(port_t port) {
 	}
 
 	outb(port + 4, 0x0F);
+
+	return 0;
 }
 
 static inline bool rx_ready(port_t port) {
