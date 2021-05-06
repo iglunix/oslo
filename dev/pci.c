@@ -59,12 +59,12 @@ static uint16_t pci_get_vendor_id(uint8_t bus, uint8_t slot) {
 	return pci_cfg_read_word(bus, slot, 0, 0);
 }
 
-static uint16_t pci_get_device_id(uint8_t bus, uint8_t slot) {
-	return pci_cfg_read_word(bus, slot, 0, 2);
+static uint16_t pci_get_device_id(uint8_t bus, uint8_t slot, uint8_t func) {
+	return pci_cfg_read_word(bus, slot, func, 2);
 }
 
-static uint8_t pci_get_class(uint8_t bus, uint8_t slot) {
-	return pci_cfg_read_byte(bus, slot, 0, 0x0b);
+static uint8_t pci_get_class(uint8_t bus, uint8_t slot, uint8_t func) {
+	return pci_cfg_read_byte(bus, slot, func, 0x0b);
 }
 
 static void check_all_busses() {
@@ -72,11 +72,16 @@ static void check_all_busses() {
 		for (uint8_t slot = 0; slot < 8; slot++) {
 			uint16_t id = pci_get_vendor_id(bus, slot);
 			if (id != 0xffff) {
-				vga_printf("%xh:%xhh %xh:%xh %s\n",
-					bus, slot,
-					id, pci_get_device_id(bus, slot),
-					pci_class_names[pci_get_class(bus, slot)]
-				);
+				for (uint8_t func = 0; func < 8; func++) {
+					uint16_t dev_id = pci_get_device_id(bus, slot, func);
+					if (dev_id != 0xffff) {
+						vga_printf("%xh:%xhh.%xhh %xh:%xh %s\n",
+							bus, slot, func,
+							id, dev_id,
+							pci_class_names[pci_get_class(bus, slot, func)]
+						);
+					}
+				}
 			}
 		}
 	}
