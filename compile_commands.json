@@ -1,74 +1,62 @@
 [
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -c -m32 bsect.S -o bsect.o",
-    "file": "bsect.S",
-    "output": "bsect.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "ld.lld --oformat binary -o bsect.bin -Ttext 0x7C00 bsect.o",
-    "file": "bsect.o",
-    "output": "bsect.bin"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -I. -MD -MF main.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c main.c -o main.o",
-    "file": "main.c",
-    "output": "main.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -I. -MD -MF loader.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c loader.c -o loader.o",
-    "file": "loader.c",
-    "output": "loader.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -I. -MD -MF dev/pci.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c dev/pci.c -o dev/pci.o",
-    "file": "dev/pci.c",
-    "output": "dev/pci.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -I. -MD -MF dev/serial.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c dev/serial.c -o dev/serial.o",
-    "file": "dev/serial.c",
-    "output": "dev/serial.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -I. -MD -MF dev/vga.o.d -m32 -g -Oz -target x86_64-unknown-none-none -ffreestanding -c dev/vga.c -o dev/vga.o",
-    "file": "dev/vga.c",
-    "output": "dev/vga.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "clang -c -m32 boot.S -o boot.o",
-    "file": "boot.S",
-    "output": "boot.o"
-  },
-  {
-    "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x1000 -T oslo.ld boot.o loader.o main.o dev/pci.o dev/vga.o dev/serial.o --oformat binary",
+    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x1000 -T oslo.ld boot.o loader.o main.o dev/pci.o dev/ide.o dev/vga.o dev/serial.o util/string.o --oformat binary",
     "file": "boot.o",
     "output": "boot.bin"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "cat bsect.bin boot.bin > oslo.bin && truncate -s 16K oslo.bin",
-    "file": "bsect.bin",
-    "output": "oslo.bin"
+    "command": "clang -c -m32 -target i386-unknown-none-none boot.S -o boot.o",
+    "file": "boot.S",
+    "output": "boot.o"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "cat oslo.bin > disk.img",
-    "file": "oslo.bin",
-    "output": "disk.img"
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF dev/vga.o.d -c dev/vga.c -o dev/vga.o",
+    "file": "dev/vga.c",
+    "output": "dev/vga.o"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "qemu-system-x86_64 -hda disk.img -enable-kvm -serial stdio",
-    "file": "disk.img",
-    "output": "qemu"
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF dev/serial.o.d -c dev/serial.c -o dev/serial.o",
+    "file": "dev/serial.c",
+    "output": "dev/serial.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF dev/ide.o.d -c dev/ide.c -o dev/ide.o",
+    "file": "dev/ide.c",
+    "output": "dev/ide.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF dev/pci.o.d -c dev/pci.c -o dev/pci.o",
+    "file": "dev/pci.c",
+    "output": "dev/pci.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF util/string.o.d -c util/string.c -o util/string.o",
+    "file": "util/string.c",
+    "output": "util/string.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF loader.o.d -c loader.c -o loader.o",
+    "file": "loader.c",
+    "output": "loader.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF main.o.d -c main.c -o main.o",
+    "file": "main.c",
+    "output": "main.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -c -m32 -target i386-unknown-none-none bsect.S -o bsect.o",
+    "file": "bsect.S",
+    "output": "bsect.o"
   }
 ]

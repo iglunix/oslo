@@ -11,6 +11,11 @@ static uint8_t row;
 static uint8_t col;
 
 int vga_init() {
+	vga_clear();
+	return 0;
+}
+
+void vga_clear() {
 	row = 0;
 	col = 0;
 	for (size_t i = 0; i < WIDTH; i++) {
@@ -18,7 +23,6 @@ int vga_init() {
 			VGA_BUF[i + j * WIDTH] = ' ' | 0x0000;
 		}
 	}
-	return 0;
 }
 
 void vga_putchar(char c) {

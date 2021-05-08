@@ -10,6 +10,7 @@ typedef struct vga_t {
 } vga_t;
 
 int vga_init();
+void vga_clear();
 void vga_putchar(char);
 void vga_puts(char const *);
 void vga_pretty_u8(uint8_t);
