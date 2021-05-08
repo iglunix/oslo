@@ -5,6 +5,14 @@
 #include <dev/pci.h>
 /* TODO: AHCI */
 #include <dev/ide.h>
+#include <fs/mbr.h>
+#include <fs/fat.h>
+
+ide_chan_t channels[2];
+
+static void disk_read(uint8_t *dest, uint32_t lba) {
+	ide_read_sectors(channels+0, 0, (uint16_t *) dest, lba, 1);
+}
 
 int main() {
 	if (vga_init())
@@ -15,21 +23,14 @@ int main() {
 	pci_dev_t dev;
 	pci_init(&dev);
 
-	ide_chan_t channels[2];
-
 	ide_init(&dev, channels);
 
-	uint16_t sec[256];
+	uint8_t sec[512];
+	disk_read(sec, 4 * 8);
 
-	ide_read_sectors(channels+0, 0, sec, 0x0, 1);
+	fat_dump_info(sec);
 
-	for (uint8_t i = 0; i < 32; i++) {
-		for (uint8_t j = 0; j < 8; j++) {
-			vga_pretty_u16(sec[i * 8 + j]);
-			vga_putchar(' ');
-		}
-		vga_putchar('\n');
-	}
+	fat_ls(&disk_read, 4 * 8);
 
 	return 0;
 }

@@ -13,10 +13,10 @@ rule cc
     command = $cc -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF $out.d -c $in -o $out
 
 rule ld
-    command = $ld -o $out -m elf_i386 -Ttext 0x1000 -T oslo.ld $in --oformat binary
+    command = $ld -o $out -m elf_i386 -Ttext 0x8000 -T oslo.ld $in --oformat binary
 
 rule fat
-    command = dd if=/dev/zero of=$out count=2048 && mkfs.vfat -n "TestFAT" $out
+    command = dd if=/dev/zero of=$out count=2048 && mkfs.vfat -n "TESTFAT" $out
 
 rule cat2k
     command = cat $in > $out && truncate -s 16K $out
@@ -25,7 +25,7 @@ rule cat
     command = cat $in > $out
 
 rule qemu
-    command = qemu-system-x86_64 -enable-kvm -hda $in
+    command = qemu-system-x86_64 -enable-kvm -hda $in -m 1024
 
 build bsect.o: as bsect.S
 build bsect.bin: ldbsect bsect.o
@@ -33,6 +33,8 @@ build bsect.bin: ldbsect bsect.o
 build main.o: cc main.c
 build loader.o: cc loader.c
 build util/string.o: cc util/string.c
+build fs/mbr.o: cc fs/mbr.c
+build fs/fat.o: cc fs/fat.c
 build dev/pci.o: cc dev/pci.c
 build dev/ide.o: cc dev/ide.c
 build dev/serial.o: cc dev/serial.c
@@ -40,14 +42,14 @@ build dev/vga.o: cc dev/vga.c
 
 # build disk.o: cc disk.c
 build boot.o: as boot.S
-build boot.bin: ld boot.o loader.o main.o dev/pci.o dev/ide.o dev/vga.o dev/serial.o util/string.o
-#build fat.img: fat
+build boot.bin: ld boot.o loader.o main.o dev/pci.o dev/ide.o dev/vga.o dev/serial.o util/string.o fs/mbr.o fs/fat.o
+# build fat.img: fat
 
 build oslo.bin: cat2k bsect.bin boot.bin
 
 #build oslo.img: pad oslo.bin
 
-build disk.img: cat oslo.bin
+build disk.img: cat oslo.bin fat.img
 
 build qemu: qemu disk.img
 

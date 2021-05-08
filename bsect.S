@@ -1,5 +1,5 @@
 .code16
-.equ STAGE2_OFFSET, 0x1000
+.equ STAGE2_OFFSET, 0x8000
 
 xor %ax, %ax
 mov %ax, %ds

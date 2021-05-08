@@ -1,7 +1,7 @@
 [
   {
     "directory": "/home/ella/Documents/Programming/oslo",
-    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x1000 -T oslo.ld boot.o loader.o main.o dev/pci.o dev/ide.o dev/vga.o dev/serial.o util/string.o --oformat binary",
+    "command": "ld.lld -o boot.bin -m elf_i386 -Ttext 0x8000 -T oslo.ld boot.o loader.o main.o dev/pci.o dev/ide.o dev/vga.o dev/serial.o util/string.o fs/mbr.o fs/fat.o --oformat binary",
     "file": "boot.o",
     "output": "boot.bin"
   },
@@ -34,6 +34,18 @@
     "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF dev/pci.o.d -c dev/pci.c -o dev/pci.o",
     "file": "dev/pci.c",
     "output": "dev/pci.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF fs/fat.o.d -c fs/fat.c -o fs/fat.o",
+    "file": "fs/fat.c",
+    "output": "fs/fat.o"
+  },
+  {
+    "directory": "/home/ella/Documents/Programming/oslo",
+    "command": "clang -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF fs/mbr.o.d -c fs/mbr.c -o fs/mbr.o",
+    "file": "fs/mbr.c",
+    "output": "fs/mbr.o"
   },
   {
     "directory": "/home/ella/Documents/Programming/oslo",
