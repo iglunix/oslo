@@ -1,16 +1,19 @@
 ld=ld.lld
 cc=clang
+cflags=-g -Oz -target i386-unknown-none-none -fno-pie
+
+# cflags=-fno-pie -O0
 
 rule as
-    command = $cc -c -m32 -target i386-unknown-none-none $in -o $out
+    command = $cc -c -m32 $cflags -ffreestanding $in -o $out
 
 rule ldbsect
-    command = $ld --oformat binary -o $out -Ttext 0x7C00 $in
+    command = $ld -m elf_i386 --oformat binary -o $out -Ttext 0x7C00 -Tbsect.ld $in
 
 rule cc
     deps = gcc
     depfile = $out.d
-    command = $cc -I. -m32 -g -Oz -target i386-unknown-none-none -ffreestanding -Wall -MD -MF $out.d -c $in -o $out
+    command = $cc -I. -m32 $cflags -ffreestanding -Wall -MD -MF $out.d -c $in -o $out
 
 rule ld
     command = $ld -o $out -m elf_i386 -Ttext 0x8000 -T oslo.ld $in --oformat binary

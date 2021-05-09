@@ -125,6 +125,15 @@ exec_stg2:
 
 	hlt
 
+BOOT_DRIVE: .byte 0x80
+WELCOME_MSG: .asciz "Welcome to OSLO: The Operating System LOader"
+UNREAL_MSG: .asciz "Currently Unreal"
+DISK_ERR_MSG: .asciz "Disk Failure"
+READING_MSG: .asciz "Reading Disk"
+STG2_MSG: .asciz "Executing Stage 2"
+
+.org 320
+
 gdt:
 	.quad 0x00000000
 gdt_code:
@@ -145,18 +154,13 @@ gdt_end:
 
 gdt_desc:
 	.word gdt_end-gdt-1
-	.quad gdt
+# can't use this; gcc doesn't like it
+# Hard code instead
+#	.quad gdt
+	.quad 32064
 
 .equ codeseg, gdt_code - gdt
 .equ dataseg, gdt_data - gdt
-
-
-BOOT_DRIVE: .byte 0x80
-WELCOME_MSG: .asciz "Welcome to OSLO: The Operating System LOader"
-UNREAL_MSG: .asciz "Currently Unreal"
-DISK_ERR_MSG: .asciz "Disk Failure"
-READING_MSG: .asciz "Reading Disk"
-STG2_MSG: .asciz "Executing Stage 2"
 
 .org 510
 .word 0xaa55
