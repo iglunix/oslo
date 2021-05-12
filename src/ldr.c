@@ -10,7 +10,7 @@ menu_screen about_menu = {
 	.selected_entry = 4,
 	.entry_count = 5,
 	.entries = {
-		{ menu_type_info, L"Welcome to YAUB (Yet Another UEFI Bootloader)!" },
+		{ menu_type_info, L"Welcome to YAUB (Built for: " BUILD_ARCH ")!" },
 		{ menu_type_info, L"This program is licensed under the MIT license" },
 		{ menu_type_info, L"and the full source code is available at:" },
 		{ menu_type_info, L"https://github.com/kukrimate/yaub.git" },

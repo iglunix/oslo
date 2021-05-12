@@ -3,7 +3,7 @@ LIBEFI = libefi
 include libefi/tools/Makefile-$(ARCH).efi
 
 # Package specific C flags
-CFLAGS += -std=c99
+CFLAGS += -std=c99 -DBUILD_ARCH=\"$(ARCH)\"
 
 # Subsystem ID (EFI Application)
 SUBSYSTEM := 10
