@@ -1,5 +1,6 @@
+ARCH ?= x86_64
 LIBEFI = libefi
-include libefi/tools/Makefile.efi
+include libefi/tools/Makefile-$(ARCH).efi
 
 # Package specific C flags
 CFLAGS += -std=c99
@@ -10,10 +11,12 @@ SUBSYSTEM := 10
 APP := efi/yaub/yaub.efi
 OBJ := src/ldr.o src/menu.o src/config.o
 
+.PHONY: all
 all: $(APP)
 
 $(APP): $(OBJ)
-	$(LD) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 
+.PHONY: clean
 clean:
 	rm -f $(APP) $(OBJ)
