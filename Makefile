@@ -8,7 +8,7 @@ CFLAGS += -std=c99 -DBUILD_ARCH=\"$(ARCH)\"
 # Subsystem ID (EFI Application)
 SUBSYSTEM := 10
 
-APP := efi/yaub/yaub.efi
+APP := efi/yaub/yaub$(EXT)
 OBJ := src/ldr.o src/menu.o src/config.o
 
 .PHONY: all
