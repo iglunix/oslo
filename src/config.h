@@ -1,10 +1,14 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-/* On-disk location of the boot entry definition file */
+//
+// Path to the confiugration file
+//
 #define ENTRIES_FILE_NAME L"\\efi\\yaub\\entries.ini"
 
-/* Read all boot entries */
+//
+// Add the entries from the configuration file to a menu screen
+//
 void add_boot_entries(menu_screen **menu);
 
 #endif
