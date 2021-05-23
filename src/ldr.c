@@ -60,18 +60,34 @@ static void start_efi_image(efi_ch16 *path, efi_ch16 *flags)
 	efi_in_key key;
 	efi_handle child_image_handle;
 	efi_device_path_protocol *image_dp;
+	efi_loaded_image_protocol *loaded_image;
 
 	// De-init menu before running image
 	menu_clearscreen();
 	menu_fini();
 
-	// Start the image
+	// Load image
 	image_dp = append_filepath_device_path(get_self_volume_dp(), path);
 	status = bs->load_image(false, self_image_handle, image_dp, NULL, 0,
 		&child_image_handle);
+	if (EFI_ERROR(status))
+		goto out;
+
+	// Append load options
+	if (flags != NULL) {
+		status = bs->handle_protocol(child_image_handle,
+			&(efi_guid) EFI_LOADED_IMAGE_PROTOCOL_GUID,
+			(void **) &loaded_image);
+		if (EFI_ERROR(status))
+			goto out;
+		loaded_image->load_options_size = efi_strsize(flags);
+		loaded_image->load_options = flags;
+	}
+
+	// Start image
 	status = bs->start_image(child_image_handle, NULL, NULL);
 
-done:
+out:
 	efi_free(image_dp);
 
 	// Re-init menu on image exit
