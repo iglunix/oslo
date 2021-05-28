@@ -41,7 +41,7 @@ void menu_init()
         st->con_out->mode->mode, &cols, &rows);
     status = st->con_out->enable_cursor(st->con_out, false);
     status = bs->create_event(EVT_TIMER,
-        TPL_APPLICATION, NULL, NULL, &timer_event);
+        TPL_CALLBACK, NULL, NULL, &timer_event);
     if (EFI_ERROR(status))
         efi_abort(L"Failed to create timer event!", EFI_ABORTED);
 }
