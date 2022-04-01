@@ -1,22 +1,32 @@
-ARCH ?= x86_64
-LIBEFI = libefi
-include libefi/tools/Makefile-$(ARCH).efi
+.POSIX:
 
-# Package specific C flags
-CFLAGS += -std=c99 -DBUILD_ARCH=\"$(ARCH)\"
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Subsystem ID (EFI Application)
-SUBSYSTEM := 10
+OBJS=efiutil/efiutil.o efiutil/print.o efiutil/string.o src/config.o src/ldr.o src/menu.o
 
-APP := efi/yaub/yaub$(EXT)
-OBJ := src/ldr.o src/menu.o src/config.o
+CFLAGS=-Iinclude -Iefiutil/include \
+--target=x86_64-unknown-windows \
+-ffreestanding \
+-fshort-wchar \
+-mno-red-zone
 
-.PHONY: all
-all: $(APP)
+LDFLAGS=--target=x86_64-unknown-windows \
+-nostdlib \
+-Wl,-entry:efi_main \
+-Wl,-subsystem:efi_application \
+-fuse-ld=lld-link
 
-$(APP): $(OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+yaub.efi: $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
-.PHONY: clean
+.PHONY: qemu
+
+qemu: yaub.efi
+	cp yaub.efi efi/boot/bootx64.efi
+	qemu-system-x86_64 -bios fw/x64/OVMF_CODE.fd -hda fat:rw:.
+	
+
 clean:
-	rm -f $(APP) $(OBJ)
+	rm -f $(OBJS)
+	rm -f yaub.efi
