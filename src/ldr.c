@@ -5,19 +5,23 @@
 
 #ifdef __x86_64__
 #define BUILD_ARCH "x86_64" 
+#elifdef __aarch64__
+#define BUILD_ARCH "aarch64" 
 #else
 #error unimplemented arch
 #endif
 // About sub-menu
 menu_screen about_menu = {
-	.title = L"About YAUB",
+	.title = L"About OSLO",
 	.timeout = -1,
 	.selected_entry = 4,
-	.entry_count = 5,
+	.entry_count = 7,
 	.entries = {
-		{ menu_type_info, L"Welcome to YAUB (Built for: " BUILD_ARCH ")!" },
+		{ menu_type_info, L"Welcome to OSLO (Built for: " BUILD_ARCH ")!" },
 		{ menu_type_info, L"This program is licensed under the ISC license" },
 		{ menu_type_info, L"and the source code is available at:" },
+		{ menu_type_info, L"https://github.com/iglunix/oslo" },
+		{ menu_type_info, L"forked from:" },
 		{ menu_type_info, L"https://github.com/kukrimate/yaub" },
 		{ menu_type_exit, L"Back..." },
 	}
@@ -27,7 +31,7 @@ menu_screen about_menu = {
 menu_entry main_menu_fixed[] = {
 	{
 		.type = menu_type_subscreen,
-		.text = L"About YAUB",
+		.text = L"About OSLO",
 		.subscreen = &about_menu
 	},
 	{
@@ -57,6 +61,7 @@ static efi_device_path_protocol *get_self_volume_dp()
 	return dp;
 err:
 	efi_abort(L"Error locating self volume device path!", status);
+	__builtin_unreachable();
 }
 
 static void start_efi_image(efi_ch16 *path, efi_ch16 *flags)

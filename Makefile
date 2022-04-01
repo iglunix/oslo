@@ -1,32 +1,34 @@
 .POSIX:
 
+ARCH?=x86_64
+
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
 OBJS=efiutil/efiutil.o efiutil/print.o efiutil/string.o src/config.o src/ldr.o src/menu.o
 
 CFLAGS=-Iinclude -Iefiutil/include \
---target=x86_64-unknown-windows \
+--target=$(ARCH)-unknown-windows \
 -ffreestanding \
 -fshort-wchar \
 -mno-red-zone
 
-LDFLAGS=--target=x86_64-unknown-windows \
+LDFLAGS=--target=$(ARCH)-unknown-windows \
 -nostdlib \
 -Wl,-entry:efi_main \
 -Wl,-subsystem:efi_application \
 -fuse-ld=lld-link
 
-yaub.efi: $(OBJS)
+oslo.efi: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 .PHONY: qemu
 
-qemu: yaub.efi
-	cp yaub.efi efi/boot/bootx64.efi
-	qemu-system-x86_64 -bios fw/x64/OVMF_CODE.fd -hda fat:rw:.
+qemu: oslo.efi
+	cp oslo.efi efi/boot/bootx64.efi
+	qemu-system-$(ARCH) -bios fw/x64/OVMF.fd -hda fat:rw:.
 	
 
 clean:
 	rm -f $(OBJS)
-	rm -f yaub.efi
+	rm -f oslo.efi

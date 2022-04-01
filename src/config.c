@@ -180,7 +180,7 @@ void add_boot_entries(menu_screen **menu)
     menu_entry entry;
 
     for (char *current_line = file_data, *next_line;
-            next_line = get_next_line(current_line);
+            (next_line = get_next_line(current_line));
             current_line = next_line) {
         efi_size current_line_length = next_line - current_line;
 

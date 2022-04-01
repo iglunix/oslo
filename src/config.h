@@ -4,7 +4,7 @@
 //
 // Path to the confiugration file
 //
-#define ENTRIES_FILE_NAME L"\\efi\\yaub\\entries.ini"
+#define ENTRIES_FILE_NAME L"\\efi\\oslo\\entries.ini"
 
 //
 // Add the entries from the configuration file to a menu screen
