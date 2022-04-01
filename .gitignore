@@ -3,3 +3,9 @@
 *.efi
 # Testing scripts
 test
+# fw
+fw
+NvVars
+# linux files
+efi/vmlinuz
+efi/initrd

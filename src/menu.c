@@ -100,6 +100,7 @@ static void menu_draw_entries(menu_screen *screen)
 //
 static void wait_for_timer_or_key(efi_event timer_event, efi_in_key *key)
 {
+    static efi_bool key_read = false;
     efi_event events[2];
     efi_size index;
     events[0] = timer_event;
@@ -107,6 +108,9 @@ static void wait_for_timer_or_key(efi_event timer_event, efi_in_key *key)
     bs->wait_for_event(ARRAY_SIZE(events), events, &index);
     switch (index) {
     case 0:
+        // reading a key disables timeout
+        if (key_read) break;
+
         // Fake enter press on timeout
         key->scan = 0;
         key->c = L'\n';
@@ -114,6 +118,7 @@ static void wait_for_timer_or_key(efi_event timer_event, efi_in_key *key)
     case 1:
         // Read real key
         st->con_in->read_key(st->con_in, key);
+        key_read = true;
         break;
     }
 }
