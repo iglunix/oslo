@@ -3,13 +3,6 @@
 #include "menu.h"
 #include "config.h"
 
-#ifdef __x86_64__
-#define BUILD_ARCH "x86_64" 
-#elifdef __aarch64__
-#define BUILD_ARCH "aarch64" 
-#else
-#error unimplemented arch
-#endif
 // About sub-menu
 menu_screen about_menu = {
 	.title = L"About OSLO",

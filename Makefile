@@ -1,17 +1,19 @@
 .POSIX:
 
-ARCH?=x86_64
+ARCH=x86_64
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+	@echo ' CC' $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 OBJS=efiutil/efiutil.o efiutil/print.o efiutil/string.o src/config.o src/ldr.o src/menu.o
 
-CFLAGS=-Iinclude -Iefiutil/include \
+CFLAGS=-Iinclude -Iinclude/$(ARCH) -Iefiutil/include \
 --target=$(ARCH)-unknown-windows \
 -ffreestanding \
 -fshort-wchar \
--mno-red-zone
+-mno-red-zone \
+-DBUILD_ARCH=\"$(ARCH)\"
 
 LDFLAGS=--target=$(ARCH)-unknown-windows \
 -nostdlib \
@@ -20,14 +22,14 @@ LDFLAGS=--target=$(ARCH)-unknown-windows \
 -fuse-ld=lld-link
 
 oslo.efi: $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	@echo ' LD' $@
+	@$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 .PHONY: qemu
 
 qemu: oslo.efi
 	cp oslo.efi efi/boot/bootx64.efi
-	qemu-system-$(ARCH) -bios fw/x64/OVMF.fd -hda fat:rw:.
-	
+	qemu-system-$(ARCH) -bios fw/x64/OVMF.fd -hda fat:rw:. -nographic -vga none -serial mon:stdio
 
 clean:
 	rm -f $(OBJS)

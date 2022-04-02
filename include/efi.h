@@ -9,13 +9,7 @@
 #include <stdint.h>
 
 /* CPU specific header */
-#ifdef __x86_64__
-#include <x86_64/cpu.h>
-#elifdef __aarch64__
-#include <arm/cpu.h>
-#else
-#error unimplemented arch
-#endif
+#include <cpu.h>
 
 // EFI handles
 typedef void *efi_handle;

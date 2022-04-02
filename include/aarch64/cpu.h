@@ -1,9 +1,9 @@
 /*
- * Type definitions for AMD64
+ * Type definitions for ARM (32-bit)
  */
 
-#ifndef X86_64_CPU_H
-#define X86_64_CPU_H
+#ifndef AARCH64_CPU_H
+#define AARCH64_CPU_H
 
 /* Fixed width types */
 typedef uint8_t efi_u8;
@@ -22,13 +22,9 @@ typedef int64_t efi_ssize;
 /*
  * Max bit for the size type
  */
-#define SIZE_MAX_BIT 0x8000000000000000
+#define SIZE_MAX_BIT 0x80000000
 
-/* Force the Microsoft AMD64 ABI if it's not the default */
-#if defined __GNUC__ && !defined _WIN32
-#define efiapi __attribute__((ms_abi))
-#else
+/* Use default ABI on ARM */
 #define efiapi
-#endif
 
 #endif
