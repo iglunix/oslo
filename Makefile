@@ -27,9 +27,18 @@ oslo.efi: $(OBJS)
 
 .PHONY: qemu
 
-qemu: oslo.efi
+qemu: qemu_$(ARCH)
+
+QEMU_OPTS=-hda fat:rw:. -nographic -vga none -serial mon:stdio -net none -m 1024
+
+qemu_x86_64: oslo.efi
 	cp oslo.efi efi/boot/bootx64.efi
-	qemu-system-$(ARCH) -bios fw/x64/OVMF.fd -hda fat:rw:. -nographic -vga none -serial mon:stdio
+	qemu-system-$(ARCH) -bios fw/x64/OVMF.fd $(QEMU_OPTS)
+
+qemu_aarch64: oslo.efi
+	cp oslo.efi efi/boot/bootaa64.efi
+	qemu-system-aarch64 -M virt -cpu cortex-a57 -bios /usr/local/share/qemu/edk2-aarch64-code.fd $(QEMU_OPTS)
+
 
 clean:
 	rm -f $(OBJS)
