@@ -1,5 +1,5 @@
 /*
- * Type definitions for ARM (32-bit)
+ * Type definitions for ARM (64-bit)
  */
 
 #ifndef AARCH64_CPU_H
@@ -22,7 +22,7 @@ typedef int64_t efi_ssize;
 /*
  * Max bit for the size type
  */
-#define SIZE_MAX_BIT 0x80000000
+#define SIZE_MAX_BIT 0x8000000000000000
 
 /* Use default ABI on ARM */
 #define efiapi
