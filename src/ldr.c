@@ -10,7 +10,7 @@ menu_screen about_menu = {
 	.selected_entry = 4,
 	.entry_count = 7,
 	.entries = {
-		{ menu_type_info, L"Welcome to OSLO (Built for: " BUILD_ARCH ")!" },
+		{ menu_type_info, L"Welcome to OSLO (Built for: " BUILD_ARCH " with: " __VERSION__ ")!" },
 		{ menu_type_info, L"This program is licensed under the ISC license" },
 		{ menu_type_info, L"and the source code is available at:" },
 		{ menu_type_info, L"https://github.com/iglunix/oslo" },
@@ -95,7 +95,7 @@ out:
 
 	// Re-init menu on image exit
 	menu_init();
-	menu_clearscreen();
+	// menu_clearscreen();
 
 	// Wait for keypress before returning
 	efi_print(L"Application exited with status: %p!\n"
